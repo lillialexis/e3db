@@ -16,10 +16,7 @@ import java.nio.file.attribute._
 
 import argonaut._, Argonaut._
 
-import org.jose4j.base64url.Base64Url
 import org.jose4j.jwk._
-import org.jose4j.keys._
-import org.jose4j.lang.ByteUtil
 
 /** Configuration file for the PDS CLI. */
 case class Config (

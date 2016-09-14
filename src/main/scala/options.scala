@@ -13,7 +13,6 @@ import java.util.UUID
 import scalaz._
 import scalaz.std.AllInstances._
 import scalaz.syntax.apply._
-import scalaz.syntax.show._
 
 import net.bmjames.opts._
 
@@ -23,7 +22,7 @@ import net.bmjames.opts._
  * This class contains global options that are applicable to all
  * commands. Each command contains options that are local to itself.
  */
-case class Options(
+case class Options (
   verbose: Boolean,
   config_file: Path,
   command: Command

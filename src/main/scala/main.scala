@@ -7,25 +7,11 @@
 
 package com.tozny.pds.cli
 
-import java.io.File
-import java.util.UUID
-import java.util.prefs._
-
-import scala.io.StdIn
 import scala.collection.JavaConversions._
-import scalaz.concurrent.Task
-
-import org.jose4j.jwe._
-import org.jose4j.jwx._
-import org.jose4j.keys.PbkdfKey
-import org.jose4j.lang.ByteUtil
 
 import com.tozny.pds.client.PDSClient
 
 object Main extends App {
-  /** Length in bytes of the user's root AES key. */
-  private val ROOT_KEY_LENGTH_BYTES = 32
-
   /** Initialize the configuration file interactively. */
   private def initConfig(opts: Options): Config = {
     val defaults = Config.load(opts.config_file).getOrElse(Config.defaults)
