@@ -30,9 +30,9 @@ case class Options (
 
 sealed trait Command
 case class Read(dest: Option[String], record_id: UUID) extends Command
-case class Write(ctype: String, data: String) extends Command
+case class Write(user_id: Option[UUID], ctype: String, data: NonEmptyList[String]) extends Command
 case class Ls(limit: Int, offset: Int) extends Command
-case object Init extends Command
+case object Register extends Command
 
 object OptionParser {
   /** Argument parser for UUID parameters. */
@@ -62,8 +62,9 @@ object OptionParser {
 
   // Options for the `write` command:
   private val writeOpts: Parser[Command] =
-    (strArgument(metavar("TYPE"), help("Record type")) |@|
-     strArgument(metavar("DATA"), help("JSON data to store (@FILENAME to read from file)")))(Write)
+    (optional(option[UUID](parseUUID, long("user"), help("Owning user of record"))) |@|
+     strArgument(metavar("TYPE"), help("Record type")) |@|
+     some(strArgument(metavar("DATA"), help("JSON data to store (@FILENAME to read from file)"))))(Write)
 
   // Options for the `ls` command:
   private val lsOpts: Parser[Command] =
@@ -86,10 +87,10 @@ object OptionParser {
 
      // Subcommands:
      subparser[Command](
-       command("read",  info(readOpts <*> helper,   progDesc("Read data from the PDS"))),
-       command("write", info(writeOpts <*> helper,  progDesc("Write data to the PDS"))),
-       command("ls",    info(lsOpts <*> helper,     progDesc("List my records in the PDS"))),
-       command("init",  info(pure(Init),            progDesc("Initialize preferences"))))
+       command("read",     info(readOpts <*> helper,   progDesc("Read data from the PDS"))),
+       command("write",    info(writeOpts <*> helper,  progDesc("Write data to the PDS"))),
+       command("ls",       info(lsOpts <*> helper,     progDesc("List my records in the PDS"))),
+       command("register", info(pure(Register),        progDesc("Register an account with the PDS"))))
     )(Options)
 
   private val opts = info(parseOpts <*> helper, progDesc("Tozny Personal Data Service CLI"))

@@ -7,9 +7,12 @@
 
 package com.tozny.pds.cli
 
+import java.nio.file.{Files,Paths}
 import scala.collection.JavaConversions._
+import scalaz._
+import argonaut.JsonParser
 
-import com.tozny.pds.client.PDSClient
+import com.tozny.pds.client._
 
 object Main extends App {
   /** Initialize the configuration file interactively. */
@@ -22,19 +25,14 @@ object Main extends App {
 
   /** Load the configuration, initializing if necessary. */
   private def loadConfig(opts: Options): Config = {
-    if (opts.command == Init) {
-      initConfig(opts)
-      sys.exit(0)
-    } else {
-      Config.load(opts.config_file) match {
-        case Some(x) => x
-        case None => initConfig(opts)
-      }
+    Config.load(opts.config_file) match {
+      case Some(x) => x
+      case None => initConfig(opts)
     }
   }
 
-  /** Process the requested command, returning a task to run. */
-  private def run(opts: Options, client: PDSClient) =
+  /** Process the requested command, synchronously. */
+  private def run(opts: Options, client: PDSClient, config: Config) =
     opts.command match {
       case Ls(limit, offset) => {
         val records = client.listRecords(limit, offset).toList
@@ -51,22 +49,40 @@ object Main extends App {
         println(client.readRecord(recordId))
       }
 
-      case Write(ctype, data) => {
-        // Load data from file or the supplied string.
-        // Convert data to a JSON record.               \
-        // Encrypt the data and wrap it in metadata.    |- should be done by SDK?
-        // Submit the wrapped data to the PDS service.  /
+      case Write(user_id, ctype, data_opts) => {
+        val data_opt = data_opts.list.toList.mkString(" ")
+        val data =
+          if (data_opt.charAt(0) == '@') {
+            new String(Files.readAllBytes(Paths.get(data_opt.substring(1))))
+          } else {
+            data_opt
+          }
+
+        val obj = JsonParser.parse(data) match {
+          case Left(err) => {
+            println(s"Invalid data: ${err}")
+            sys.exit(1)
+          }
+          case Right(x) => x
+        }
+
+        val meta = new Meta(None, config.client_id,
+          user_id.getOrElse(config.client_id), ctype, None, None)
+        val dataMap = obj.as[Map[String, String]].value.get
+        val record = new Record(meta, dataMap)
+        val record_id = client.writeRecord(record)
+
+        println(record_id)
       }
 
-      case Init => {}   // handled in main
+      case Register => {}   // handled in main
     }
 
   // Parse arguments and load configuration.
   val opts = OptionParser.parse(args)
   val config = loadConfig(opts)
 
-  // Create the PDS REST client and execute the requested command,
-  // returning a Task to be run.
+  // Create the PDS REST client and execute the requested command.
   val client = new PDSClient.Builder()
     .setServiceUri(config.api_url)
     .setApiKeyId(config.api_key_id)
@@ -74,7 +90,7 @@ object Main extends App {
     .build()
 
   try {
-    run(opts, client)
+    run(opts, client, config)
   } catch {
     case e: Exception => {
       println(s"Error: ${e.getMessage}")

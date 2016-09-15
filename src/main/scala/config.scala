@@ -13,6 +13,7 @@ import scala.collection.JavaConversions._
 import java.io.IOException
 import java.nio.file.{Files,Path}
 import java.nio.file.attribute._
+import java.util.UUID
 
 import argonaut._, Argonaut._
 
@@ -22,6 +23,7 @@ import org.jose4j.jwk._
 case class Config (
   version: Int,
   client_key: Option[PublicJsonWebKey],
+  client_id: UUID,
   api_url: String,
   api_key_id: String,
   api_secret: String
@@ -50,14 +52,26 @@ object Config {
       }
     )
 
+  /** Encode a {@code java.util.UUID} as a JSON string. */
+  implicit def UUIDEncodeJson: EncodeJson[UUID] =
+    EncodeJson(a => jString(a.toString))
+
+  /** Decode a JSON string to a {@code java.util.UUID}. */
+  implicit def UUIDDecodeJson: DecodeJson[UUID] =
+    StringDecodeJson.map(a => UUID.fromString(a))
+
   /** JSON codec for the {@code Config} class. */
   implicit def ConfigJsonCodec: CodecJson[Config] =
-    casecodec5(Config.apply, Config.unapply)(
-      "version", "client_key", "api_url", "api_key_id", "api_secret")
+    casecodec6(Config.apply, Config.unapply)(
+      "version", "client_key", "client_id",
+      "api_url", "api_key_id", "api_secret")
 
   /** Return a default configuration with a newly generated key. */
   def defaults() = {
-    new Config(VERSION, None, "https://api.pds.tozny.com/v1", "", "")
+    new Config(
+      VERSION, None,
+      UUID.fromString("00000000-0000-0000-0000-000000000000"),
+      "https://api.pds.tozny.com/v1", "", "")
   }
 
   /** Load configuration from {@code file}. */
@@ -89,16 +103,25 @@ object Config {
     Files.write(file, s.getBytes)
   }
 
+  private def readLineDefault(prompt: String, default: String): String = {
+    val value = StdIn.readLine(s"${prompt} [${default}]: ")
+    if (value == "") { default } else { value }
+  }
+
   /** Initialize a configuration interactively from a set of defaults. */
   def init(defaults: Config): Config = {
-    val api_url = StdIn.readLine(s"API URL [${defaults.api_url}]: ")
-    val api_key_id = StdIn.readLine(s"API Key ID [${defaults.api_key_id}]: ")
-    val api_secret = StdIn.readLine(s"API Secret [${defaults.api_secret}]: ")
+    val api_url = readLineDefault("API URL", defaults.api_url)
+    val api_key_id = readLineDefault("API Key ID", defaults.api_key_id)
+    val api_secret = readLineDefault("API Secret", defaults.api_secret)
+    val client_id = readLineDefault("Client UUID", defaults.client_id.toString)
+    val client_key =
+      if (defaults.client_key.isEmpty) {
+        Some(RsaJwkGenerator.generateJwk(KEY_PAIR_BITS))
+      } else {
+        defaults.client_key
+      }
 
-    Config(VERSION,
-           if (defaults.client_key.isEmpty) { Some(RsaJwkGenerator.generateJwk(KEY_PAIR_BITS)) } else { defaults.client_key },
-           if (api_url == "") { defaults.api_url } else { api_url },
-           if (api_key_id == "") { defaults.api_key_id } else { api_key_id },
-           if (api_secret == "") { defaults.api_secret } else { api_secret })
+    Config(VERSION, client_key, UUID.fromString(client_id),
+           api_url, api_key_id, api_secret)
   }
 }
