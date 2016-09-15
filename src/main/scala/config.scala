@@ -15,13 +15,15 @@ import java.nio.file.{Files,Path}
 import java.nio.file.attribute._
 import java.util.UUID
 
+import scalaz._
+import scalaz.syntax.either._
+
 import argonaut._, Argonaut._
 
 import org.jose4j.jwk._
 
 /** Configuration file for the PDS CLI. */
 case class Config (
-  version: Int,
   client_key: Option[PublicJsonWebKey],
   client_id: UUID,
   api_url: String,
@@ -30,9 +32,6 @@ case class Config (
 )
 
 object Config {
-  /** Current version of the configuration format. */
-  final val VERSION = 1
-
   /** Size in bits of the generated RSA key pair. */
   final val KEY_PAIR_BITS = 3072
 
@@ -62,30 +61,30 @@ object Config {
 
   /** JSON codec for the {@code Config} class. */
   implicit def ConfigJsonCodec: CodecJson[Config] =
-    casecodec6(Config.apply, Config.unapply)(
-      "version", "client_key", "client_id",
+    casecodec5(Config.apply, Config.unapply)(
+      "client_key", "client_id",
       "api_url", "api_key_id", "api_secret")
 
-  /** Return a default configuration with a newly generated key. */
-  def defaults() = {
-    new Config(
-      VERSION, None,
-      UUID.fromString("00000000-0000-0000-0000-000000000000"),
-      "https://api.pds.tozny.com/v1", "", "")
-  }
-
   /** Load configuration from {@code file}. */
-  def load(file: Path): Option[Config] = {
-    try {
-      val s = new String(Files.readAllBytes(file))
-      s.decodeOption[Config]
+  def load(file: Path): CLIError \/ Config = {
+    val s = try {
+      new String(Files.readAllBytes(file))
     } catch {
-      case _: IOException => None
+      case e: IOException =>
+        return ConfigError(s"Error loading config: ${e.getMessage}").left
+    }
+
+    // TODO: Not sure why 'argonaut-scalaz' doesn't add a decode
+    // function to restore the 6.1.x behavior here. So for now,
+    // we'll manually convert Either[_, _] to '_ \/ _', but
+    // I'm not wild about it.
+    \/.fromEither(s.decodeEither[Config]).leftMap { err =>
+      ConfigError(s"Error loading config: ${err}")
     }
   }
 
   /** Save configuration to {@code file}. */
-  def save(config_file: Path, config: Config) = {
+  def save(config_file: Path, config: Config): CLIError \/ Unit = try {
     val s = config.asJson.spaces2
     val posixFileAttr = PosixFilePermissions.asFileAttribute(
       PosixFilePermissions.fromString("rw-------"))
@@ -101,27 +100,9 @@ object Config {
     Files.deleteIfExists(file)
     Files.createFile(file, posixFileAttr)
     Files.write(file, s.getBytes)
-  }
-
-  private def readLineDefault(prompt: String, default: String): String = {
-    val value = StdIn.readLine(s"${prompt} [${default}]: ")
-    if (value == "") { default } else { value }
-  }
-
-  /** Initialize a configuration interactively from a set of defaults. */
-  def init(defaults: Config): Config = {
-    val api_url = readLineDefault("API URL", defaults.api_url)
-    val api_key_id = readLineDefault("API Key ID", defaults.api_key_id)
-    val api_secret = readLineDefault("API Secret", defaults.api_secret)
-    val client_id = readLineDefault("Client UUID", defaults.client_id.toString)
-    val client_key =
-      if (defaults.client_key.isEmpty) {
-        Some(RsaJwkGenerator.generateJwk(KEY_PAIR_BITS))
-      } else {
-        defaults.client_key
-      }
-
-    Config(VERSION, client_key, UUID.fromString(client_id),
-           api_url, api_key_id, api_secret)
+    ().right
+  } catch {
+    case e: IOException =>
+      ConfigError(s"Error saving config: ${e.getMessage}").left
   }
 }
