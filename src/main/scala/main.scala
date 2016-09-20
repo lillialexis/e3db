@@ -136,6 +136,7 @@ object Main {
           .setServiceUri(config.api_url)
           .setApiKeyId(config.api_key_id)
           .setApiSecret(config.api_secret)
+          .setKeyManager(new StaticKeyManager(config.client_key, config.access_key))
           .build()
         res <- run(opts, client, config)
       } yield res
