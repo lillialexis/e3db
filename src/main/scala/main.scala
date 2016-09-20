@@ -8,12 +8,17 @@
 package com.tozny.pds.cli
 
 import java.nio.file.{Files,Paths}
+
+import scala.annotation.tailrec
+import scala.io.StdIn
 import scala.collection.JavaConversions._
 
 import scalaz._
 import scalaz.syntax.either._
 
 import argonaut.JsonParser
+
+import org.jose4j.jwk._
 
 import com.tozny.pds.client._
 
@@ -23,6 +28,45 @@ object Main {
   /** State passed to each command handler. */
   case class State(opts: Options, config: Config, client: PDSClient)
 
+  /** Read an interactive value with a default. */
+  private def readLineDefault(prompt: String, default: String): String = {
+    val value = StdIn.readLine(s"${prompt} [${default}]: ")
+    if (value == "") { default } else { value }
+  }
+
+  /** Read a required interactive value with a default. */
+  @tailrec
+  private def readLineRequired(prompt: String, default: String): String = {
+    val value = readLineDefault(prompt, default)
+
+    if (value == "") {
+      println("A value is required for this field.")
+      readLineRequired(prompt, default)
+    } else {
+      value
+    }
+  }
+
+  private val DEFAULT_SERVICE_URL = "https://api.pds.tozny.com/v1"
+  private val KEY_PAIR_BITS = 4096
+  private val ACCESS_KEY_BITS = 256
+
+  /** Perform interactive registration and exit. */
+  private def do_register(opts: Options): CLIError \/ Unit = {
+    val email = readLineRequired("E-Mail Address", "")
+    val url = readLineDefault("Service URL", DEFAULT_SERVICE_URL)
+    val client = new PDSClient.Builder().setServiceUri(url).build()
+    val client_key = RsaJwkGenerator.generateJwk(KEY_PAIR_BITS)
+    val access_key = OctJwkGenerator.generateJwk(ACCESS_KEY_BITS)
+
+    val req = RegisterRequest(email, client_key)
+    val resp = client.register(req)
+    val config = Config(client_key, access_key, resp.client_id, url,
+                        resp.api_key_id, resp.api_secret)
+
+    Config.save(opts.config_file, config)
+  }
+
   /** List records accessible to this client. */
   private def do_ls(state: State, cmd: Ls): CLIError \/ Unit = {
     val records = state.client.listRecords(cmd.limit, cmd.offset).toList
@@ -31,7 +75,7 @@ object Main {
     println("-" * 78)
     records.foreach { rec =>
       printf("%-40s  %-12s  %s\n", rec.record_id.get,
-             rec.producer_id.toString.slice(0, 8) + "...", rec.`type`)
+             rec.writer_id.toString.slice(0, 8) + "...", rec.`type`)
     }
 
     ok
@@ -82,37 +126,13 @@ object Main {
     }
   }
 
-  // For future use in register command:
-  //
-  // private def readLineDefault(prompt: String, default: String): String = {
-  //   val value = StdIn.readLine(s"${prompt} [${default}]: ")
-  //   if (value == "") { default } else { value }
-  // }
-  //
-  // /** Initialize a configuration interactively from a set of defaults. */
-  // def init(defaults: Config): Config = {
-  //   val api_url = readLineDefault("API URL", defaults.api_url)
-  //   val api_key_id = readLineDefault("API Key ID", defaults.api_key_id)
-  //   val api_secret = readLineDefault("API Secret", defaults.api_secret)
-  //   val client_id = readLineDefault("Client UUID", defaults.client_id.toString)
-  //   val client_key =
-  //     if (defaults.client_key.isEmpty) {
-  //       Some(RsaJwkGenerator.generateJwk(KEY_PAIR_BITS))
-  //     } else {
-  //       defaults.client_key
-  //     }
-  //
-  //   Config(VERSION, client_key, UUID.fromString(client_id),
-  //          api_url, api_key_id, api_secret)
-  // }
-
   def main(args: Array[String]) {
     // Parse arguments and load configuration.
     val opts = OptionParser.parse(args)
 
     // Short-circuit to registration before loading the config.
     if (opts.command == Register) {
-      println("Doing registration flow.")
+      do_register(opts)
       sys.exit(0)
     }
 
@@ -127,8 +147,12 @@ object Main {
       res <- run(opts, client, config)
     } yield res
 
-    result.leftMap { err =>
-      println(err.message)
+    result.leftMap {
+      case err: ConfigError => {
+        println(err.message)
+        println("Run `pds register' to create an account.")
+      }
+      case err => println(err.message)
     }
   }
 }

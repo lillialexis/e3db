@@ -87,10 +87,10 @@ object OptionParser {
 
      // Subcommands:
      subparser[Command](
-       command("read",     info(readOpts <*> helper,   progDesc("Read data from the PDS"))),
-       command("write",    info(writeOpts <*> helper,  progDesc("Write data to the PDS"))),
-       command("ls",       info(lsOpts <*> helper,     progDesc("List my records in the PDS"))),
-       command("register", info(pure(Register),        progDesc("Register an account with the PDS"))))
+       command("read",     info(readOpts <*> helper,  progDesc("Read data from the PDS"))),
+       command("write",    info(writeOpts <*> helper, progDesc("Write data to the PDS"))),
+       command("ls",       info(lsOpts <*> helper,    progDesc("List my records in the PDS"))),
+       command("register", info(pure(Register),       progDesc("Register an account with the PDS"))))
     )(Options)
 
   private val opts = info(parseOpts <*> helper, progDesc("Tozny Personal Data Service CLI"))
