@@ -17,7 +17,7 @@ enablePlugins(JavaAppPackaging)
 enablePlugins(DockerPlugin)
 enablePlugins(AshScriptPlugin)
 
-dockerBaseImage := "tozny/docker-java"
+dockerBaseImage := "tozny/java"
 executableScriptName := "pds"
 
 resolvers += Resolver.sonatypeRepo("releases")
