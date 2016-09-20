@@ -126,33 +126,34 @@ object Main {
     }
   }
 
-  def main(args: Array[String]) {
-    // Parse arguments and load configuration.
-    val opts = OptionParser.parse(args)
-
-    // Short-circuit to registration before loading the config.
+  private def mainOpts(opts: Options): CLIError \/ Unit = {
     if (opts.command == Register) {
       do_register(opts)
-      sys.exit(0)
+    } else {
+      for {
+        config <- Config.load(opts.config_file)
+        client = new PDSClient.Builder()
+          .setServiceUri(config.api_url)
+          .setApiKeyId(config.api_key_id)
+          .setApiSecret(config.api_secret)
+          .build()
+        res <- run(opts, client, config)
+      } yield res
     }
+  }
 
-    // Create the PDS REST client and execute the requested command.
-    val result = for {
-      config <- Config.load(opts.config_file)
-      client = new PDSClient.Builder()
-        .setServiceUri(config.api_url)
-        .setApiKeyId(config.api_key_id)
-        .setApiSecret(config.api_secret)
-        .build()
-      res <- run(opts, client, config)
-    } yield res
-
-    result.leftMap {
+  def main(args: Array[String]) {
+    CLIError.handle {
+      mainOpts(OptionParser.parse(args))
+    }.leftMap {
       case err: ConfigError => {
         println(err.message)
         println("Run `pds register' to create an account.")
       }
-      case err => println(err.message)
+
+      case err => {
+        println(err.message)
+      }
     }
   }
 }
