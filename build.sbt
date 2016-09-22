@@ -21,6 +21,7 @@ dockerBaseImage := "tozny/java"
 executableScriptName := "pds"
 
 resolvers += Resolver.sonatypeRepo("releases")
+resolvers += Resolver.jcenterRepo
 
 libraryDependencies ++= Seq(
   // Core Libraries
