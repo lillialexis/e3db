@@ -9,17 +9,16 @@ package com.tozny.pds.cli
 
 import scala.io.StdIn
 import scala.collection.JavaConversions._
-
 import java.io.IOException
-import java.nio.file.{Files,Path}
+import java.nio.file.{Files, Path}
 import java.nio.file.attribute._
+import java.util
 import java.util.UUID
 
 import scalaz._
 import scalaz.syntax.either._
-
-import argonaut._, Argonaut._
-
+import argonaut._
+import Argonaut._
 import org.jose4j.jwk._
 
 /** Configuration file for the PDS CLI. */
@@ -100,22 +99,25 @@ object Config {
     }
   }
 
+  private val w = """(?i)(^Win).*""".r
+
   /** Save configuration to {@code file}. */
   def save(config_file: Path, config: Config): CLIError \/ Unit = try {
     val s = config.asJson.spaces2
-    val posixFileAttr = PosixFilePermissions.asFileAttribute(
-      PosixFilePermissions.fromString("rw-------"))
-    val posixDirAttr = PosixFilePermissions.asFileAttribute(
-      PosixFilePermissions.fromString("rwx------"))
-    // TODO: Add secure Windows permissions.
+    val (fileAttr, dirAttr) = System.getProperty("os.name") match {
+      case w(_) => (Seq(), Seq())
+      case _ => // Some other OS
+        (Seq(PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------"))),
+          Seq(PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------"))))
+    }
 
     val file = config_file.toAbsolutePath
-    Files.createDirectories(file.getParent, posixDirAttr)
+    Files.createDirectories(file.getParent, dirAttr: _*)
 
     // We delete the file and create it exclusively to ensure that
     // the permissions are set correctly.
     Files.deleteIfExists(file)
-    Files.createFile(file, posixFileAttr)
+    Files.createFile(file, fileAttr: _*)
     Files.write(file, s.getBytes)
     ().right
   } catch {

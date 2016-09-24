@@ -29,10 +29,16 @@ case class Options (
 )
 
 sealed trait Command
+
 case class Read(dest: Option[String], record_id: UUID) extends Command
 case class Write(user_id: Option[UUID], ctype: String, data: NonEmptyList[String]) extends Command
 case class Ls(limit: Int, offset: Int) extends Command
 case object Register extends Command
+
+sealed trait Sharing
+
+case class AddSharing(reader: UUID, ctype: String) extends Command with Sharing
+case class RemoveSharing(reader: UUID, ctype: Option[String]) extends Command with Sharing
 
 object OptionParser {
   /** Argument parser for UUID parameters. */
@@ -73,6 +79,14 @@ object OptionParser {
      option[Int](readInt, long("offset"),
             showDefault, help("Index of first result returned"), value(0)))(Ls)
 
+  private val shareOpts: Parser[Command] =
+    (argument(parseUUID, metavar("READER_ID"), help("ID of reader.")) |@|
+      argument(readStr, metavar("CONTENT_TYPE"), help("Type of content to share.")))(AddSharing)
+
+  private val denyOpts: Parser[Command] =
+    (argument(parseUUID, metavar("READER_ID"), help("ID of reader.")) |@|
+      optional(argument(readStr, metavar("CONTENT_TYPE"), help("Type of content to stop sharing (if absent, stop sharing all content)."))))(RemoveSharing)
+
   // Default location of the PDS CLI config file.
   private val defaultConfigFile =
     Paths.get(System.getProperty("user.home"), ".tozny", "pds.json")
@@ -87,11 +101,14 @@ object OptionParser {
 
      // Subcommands:
      subparser[Command](
-       command("read",     info(readOpts <*> helper,  progDesc("Read data from the PDS"))),
-       command("write",    info(writeOpts <*> helper, progDesc("Write data to the PDS"))),
-       command("ls",       info(lsOpts <*> helper,    progDesc("List my records in the PDS"))),
-       command("register", info(pure(Register),       progDesc("Register an account with the PDS"))))
-    )(Options)
+       command("read",     info(readOpts <*> helper,   progDesc("Read data from the PDS"))),
+       command("write",    info(writeOpts <*> helper,  progDesc("Write data to the PDS"))),
+       command("ls",       info(lsOpts <*> helper,     progDesc("List my records in the PDS"))),
+       command("register", info(pure(Register),        progDesc("Register an account with the PDS"))),
+       command("share",    info(shareOpts <*> helper, progDesc("Start sharing records with the given user.")))/*,
+       not yet working
+       command("deny",     info(denyOpts <*> helper,  progDesc("Stop sharing records with the given user.")))*/
+    ))(Options)
 
   private val opts = info(parseOpts <*> helper, progDesc("Tozny Personal Data Service CLI"))
   private val optPrefs = prefs(showHelpOnError)

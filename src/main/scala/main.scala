@@ -87,6 +87,30 @@ object Main {
     ok
   }
 
+  private def do_share(state: State, cmd: Sharing with Command): CLIError \/ Unit = {
+    val req = cmd match {
+      case AddSharing(reader, content_type) => {
+        PolicyRequest(state.config.client_id,
+          state.config.client_id,
+          reader,
+          Allow(com.tozny.pds.client.Read()),
+          Some(content_type)
+        )
+      }
+      case RemoveSharing(reader, content_type) => {
+        PolicyRequest(state.config.client_id,
+          state.config.client_id,
+          reader,
+          Allow(com.tozny.pds.client.Read()),
+          content_type
+        )
+      }
+    }
+
+    state.client.policy(req)
+    ok
+  }
+
   /** Write a record given type and data. */
   private def do_write(state: State, cmd: Write): CLIError \/ Unit = {
     val data_opt = cmd.data.list.toList.mkString(" ")
@@ -119,9 +143,10 @@ object Main {
     val state = State(opts, config, client)
 
     opts.command match {
-      case cmd @ Ls(_,_)        => do_ls(state, cmd)
-      case cmd @ Read(_, _)     => do_read(state, cmd)
-      case cmd @ Write(_, _, _) => do_write(state, cmd)
+      case cmd : Ls => do_ls(state, cmd)
+      case cmd : Read => do_read(state, cmd)
+      case cmd : Write => do_write(state, cmd)
+      case cmd : Sharing => do_share(state, cmd)
       case       Register       => ok
     }
   }
