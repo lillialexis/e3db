@@ -47,15 +47,16 @@ object Main {
     }
   }
 
-  private val DEFAULT_SERVICE_URL = "https://api.pds.tozny.com/v1"
+  private val DEFAULT_SERVICE_URL = "https://api.dev.pds.tozny.com/v1"
   private val KEY_PAIR_BITS = 4096
   private val ACCESS_KEY_BITS = 256
+  private val CAB_VERSION = "1.0"
 
   /** Perform interactive registration and exit. */
   private def do_register(opts: Options): CLIError \/ Unit = {
     val email = readLineRequired("E-Mail Address", "")
     val url = readLineDefault("Service URL", DEFAULT_SERVICE_URL)
-    val client = new PDSClient.Builder().setServiceUri(url).build()
+    var client = new PDSClient.Builder().setServiceUri(url).build()
     val client_key = RsaJwkGenerator.generateJwk(KEY_PAIR_BITS)
     val access_key = OctJwkGenerator.generateJwk(ACCESS_KEY_BITS)
 
@@ -65,6 +66,23 @@ object Main {
                         resp.api_key_id, resp.api_secret)
 
     Config.save(opts.config_file, config)
+
+    // Create a new client with credentials so we can put an initial CAB.
+    client = new PDSClient.Builder()
+      .setServiceUri(config.api_url)
+      .setApiKeyId(config.api_key_id)
+      .setApiSecret(config.api_secret)
+      .setKeyManager(new StaticKeyManager(config.client_key, config.access_key))
+      .build()
+
+    // Create an initial CAB with a single entry for the writer.
+    val id = resp.client_id
+    // user == writer == authorizer (for now)
+    val cab = Cab(CAB_VERSION, CabId(id), new java.util.ArrayList(),
+                  CabId(id), CabId(id))
+    client.putCab(id, id, cab)
+
+    ok
   }
 
   /** List records accessible to this client. */
