@@ -108,6 +108,8 @@ object Main {
   private def do_share(state: State, cmd: Sharing with Command): CLIError \/ Unit = {
     val req = cmd match {
       case AddSharing(reader, content_type) => {
+        val user_id = state.config.client_id    // assume writer == user for now
+        state.client.authorizeReader(user_id, reader)
         PolicyRequest(state.config.client_id,
           state.config.client_id,
           reader,
@@ -156,6 +158,16 @@ object Main {
     ok
   }
 
+  /** Read a CAB from the PDS and print it. */
+  private def do_getcab(state: State, cmd: GetCab): CLIError \/ Unit = {
+    println(state.client.getCab(cmd.writer_id, cmd.user_id)).right
+  }
+
+  /** Read a client's public key from the PDS and print it. */
+  private def do_getkey(state: State, cmd: GetKey): CLIError \/ Unit = {
+    println(state.client.getClientKey(cmd.client_id)).right
+  }
+
   /** Process the requested command, synchronously. */
   private def run(opts: Options, client: PDSClient, config: Config): CLIError \/ Unit = {
     val state = State(opts, config, client)
@@ -165,6 +177,8 @@ object Main {
       case cmd : Read => do_read(state, cmd)
       case cmd : Write => do_write(state, cmd)
       case cmd : Sharing => do_share(state, cmd)
+      case cmd : GetCab => do_getcab(state, cmd)
+      case cmd : GetKey => do_getkey(state, cmd)
       case       Register       => ok
     }
   }
@@ -176,6 +190,7 @@ object Main {
       for {
         config <- Config.load(opts.config_file)
         client = new PDSClient.Builder()
+          .setClientId(config.client_id)
           .setServiceUri(config.api_url)
           .setApiKeyId(config.api_key_id)
           .setApiSecret(config.api_secret)

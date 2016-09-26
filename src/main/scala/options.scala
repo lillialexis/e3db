@@ -35,6 +35,10 @@ case class Write(user_id: Option[UUID], ctype: String, data: NonEmptyList[String
 case class Ls(limit: Int, offset: Int) extends Command
 case object Register extends Command
 
+// TODO: These should arguably be subcommands like "pds cab get"...
+case class GetCab(writer_id: UUID, user_id: UUID) extends Command
+case class GetKey(client_id: UUID) extends Command
+
 sealed trait Sharing
 
 case class AddSharing(reader: UUID, ctype: String) extends Command with Sharing
@@ -79,6 +83,15 @@ object OptionParser {
      option[Int](readInt, long("offset"),
             showDefault, help("Index of first result returned"), value(0)))(Ls)
 
+  // Options for the `getcab` command:
+  private val getCabOpts: Parser[Command] =
+    (argument[UUID](parseUUID, metavar("WRITER_ID"), help("ID of writer")) |@|
+     argument[UUID](parseUUID, metavar("USER_ID"),   help("ID of user")))(GetCab)
+
+ // Options for the `getkey` command:
+ private val getKeyOpts: Parser[Command] =
+   (argument[UUID](parseUUID, metavar("CLIENT_ID"), help("ID of client"))).map(GetKey.apply)
+
   private val shareOpts: Parser[Command] =
     (argument(parseUUID, metavar("READER_ID"), help("ID of reader.")) |@|
       argument(readStr, metavar("CONTENT_TYPE"), help("Type of content to share.")))(AddSharing)
@@ -105,6 +118,8 @@ object OptionParser {
        command("write",    info(writeOpts <*> helper,  progDesc("Write data to the PDS"))),
        command("ls",       info(lsOpts <*> helper,     progDesc("List my records in the PDS"))),
        command("register", info(pure(Register),        progDesc("Register an account with the PDS"))),
+       command("getcab",   info(getCabOpts <*> helper, progDesc("Retrieve a CAB from the PDS"))),
+       command("getkey",   info(getKeyOpts <*> helper, progDesc("Retrieve a client's public key"))),
        command("share",    info(shareOpts <*> helper, progDesc("Start sharing records with the given user.")))/*,
        not yet working
        command("deny",     info(denyOpts <*> helper,  progDesc("Stop sharing records with the given user.")))*/
