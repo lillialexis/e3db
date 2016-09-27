@@ -85,6 +85,12 @@ object Main {
     ok
   }
 
+  /** Display configuration information. */
+  private def do_info(state: State): CLIError \/ Unit = {
+    printf("%-20s %s\n", "Client ID:", state.config.client_id)
+    ok
+  }
+
   /** List records accessible to this client. */
   private def do_ls(state: State, cmd: Ls): CLIError \/ Unit = {
     val records = state.client.listRecords(cmd.limit, cmd.offset).toList
@@ -215,6 +221,7 @@ object Main {
       case cmd : Sharing => do_share(state, cmd)
       case cmd : GetCab => do_getcab(state, cmd)
       case cmd : GetKey => do_getkey(state, cmd)
+      case       Info => do_info(state)
       case       Register       => ok
     }
   }

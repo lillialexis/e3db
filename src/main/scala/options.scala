@@ -34,6 +34,7 @@ case class Read(dest: Option[String], raw: Boolean, record_id: UUID) extends Com
 case class Write(user_id: Option[UUID], ctype: String, data: NonEmptyList[String]) extends Command
 case class Ls(limit: Int, offset: Int) extends Command
 case object Register extends Command
+case object Info extends Command
 
 // TODO: These should arguably be subcommands like "pds cab get"...
 case class GetCab(writer_id: UUID, user_id: UUID) extends Command
@@ -115,6 +116,7 @@ object OptionParser {
 
      // Subcommands:
      subparser[Command](
+       command("info",     info(pure(Info),            progDesc("Display configuration info"))),
        command("read",     info(readOpts <*> helper,   progDesc("Read data from the PDS"))),
        command("write",    info(writeOpts <*> helper,  progDesc("Write data to the PDS"))),
        command("ls",       info(lsOpts <*> helper,     progDesc("List my records in the PDS"))),
