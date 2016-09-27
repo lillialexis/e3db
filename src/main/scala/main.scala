@@ -101,7 +101,20 @@ object Main {
 
   /** Read a record by ID. */
   private def do_read(state: State, cmd: Read): CLIError \/ Unit = {
-    println(state.client.readRecord(cmd.record_id))
+    val rec = state.client.readRecord(cmd.record_id)
+
+    printf("%-20s %s\n", "Record ID:", rec.meta.record_id.get)
+    printf("%-20s %s\n", "Record Type:", rec.meta.`type`)
+    printf("%-20s %s\n", "Writer ID:", rec.meta.writer_id)
+    printf("%-20s %s\n", "User ID:", rec.meta.user_id)
+    printf("\n")
+    printf("%-20s %s\n", "Field", "Value")
+    println("-" * 78)
+
+    rec.data.foreach { case (k, v) =>
+      printf("%-20s %s\n", k, v)
+    }
+
     ok
   }
 
