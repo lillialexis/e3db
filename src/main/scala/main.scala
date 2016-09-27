@@ -198,7 +198,10 @@ object Main {
 
   /** Read a client's public key from the PDS and print it. */
   private def do_getkey(state: State, cmd: GetKey): CLIError \/ Unit = {
-    println(state.client.getClientKey(cmd.client_id)).right
+    val keyJson = state.client.getClientKey(cmd.client_id).toJson
+    \/.fromEither(JsonParser.parse(keyJson)).map { obj =>
+      println(obj.spaces2)
+    }.leftMap(DataError)
   }
 
   /** Process the requested command, synchronously. */
