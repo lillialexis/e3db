@@ -178,7 +178,22 @@ object Main {
 
   /** Read a CAB from the PDS and print it. */
   private def do_getcab(state: State, cmd: GetCab): CLIError \/ Unit = {
-    println(state.client.getCab(cmd.writer_id, cmd.user_id)).right
+    val cab = state.client.getCab(cmd.writer_id, cmd.user_id)
+
+    printf("%-20s %s\n", "CAB Version:", cab.version)
+    printf("%-20s %s\n", "Authorizer ID:", cab.authorizer.id)
+    printf("%-20s %s\n", "Writer ID:", cab.writer.id)
+    printf("%-20s %s\n", "User ID:", cab.user.id)
+
+    printf("\n")
+    printf("%-40s %s\n", "Reader ID", "Encrypted Access Key")
+    println("-" * 78)
+
+    cab.pairs.foreach { case CabPair(client_id, eak) =>
+      printf("%-40s %s\n", client_id, eak)
+    }
+
+    ok
   }
 
   /** Read a client's public key from the PDS and print it. */
