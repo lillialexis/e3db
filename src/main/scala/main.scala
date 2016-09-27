@@ -101,7 +101,12 @@ object Main {
 
   /** Read a record by ID. */
   private def do_read(state: State, cmd: Read): CLIError \/ Unit = {
-    val rec = state.client.readRecord(cmd.record_id)
+    val rec =
+      if (cmd.raw) {
+        state.client.readRawRecord(cmd.record_id)
+      } else {
+        state.client.readRecord(cmd.record_id)
+      }
 
     printf("%-20s %s\n", "Record ID:", rec.meta.record_id.get)
     printf("%-20s %s\n", "Record Type:", rec.meta.`type`)

@@ -30,7 +30,7 @@ case class Options (
 
 sealed trait Command
 
-case class Read(dest: Option[String], record_id: UUID) extends Command
+case class Read(dest: Option[String], raw: Boolean, record_id: UUID) extends Command
 case class Write(user_id: Option[UUID], ctype: String, data: NonEmptyList[String]) extends Command
 case class Ls(limit: Int, offset: Int) extends Command
 case object Register extends Command
@@ -68,6 +68,7 @@ object OptionParser {
   // Options for the `read` command:
   private val readOpts: Parser[Command] =
     (optional(strOption(long("dest"), help("File to write data to"))) |@|
+     switch(short('r'), long("raw"), help("Output raw (encrypted) data")) |@|
      argument(parseUUID, metavar("RECORD_ID"), help("Record ID to read")))(Read)
 
   // Options for the `write` command:
