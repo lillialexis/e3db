@@ -7,20 +7,17 @@
 
 package com.tozny.pds.cli
 
-import java.nio.file.{Files,Paths}
+import java.nio.file.{Files, Paths}
 
 import scala.annotation.tailrec
 import scala.io.StdIn
 import scala.collection.JavaConversions._
-
 import scalaz._
 import scalaz.syntax.either._
-
 import argonaut.JsonParser
-
 import org.jose4j.jwk._
-
 import com.tozny.pds.client._
+import org.jose4j.jwe._
 
 object Main {
   private val ok = ().right
@@ -58,6 +55,7 @@ object Main {
     val url = readLineDefault("Service URL", DEFAULT_SERVICE_URL)
     var client = new PDSClient.Builder().setServiceUri(url).build()
     val client_key = RsaJwkGenerator.generateJwk(KEY_PAIR_BITS)
+    client_key.setAlgorithm(KeyManagementAlgorithmIdentifiers.RSA1_5)
     val access_key = OctJwkGenerator.generateJwk(ACCESS_KEY_BITS)
 
     val req = RegisterRequest(email, client_key)
