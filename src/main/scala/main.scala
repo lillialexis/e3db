@@ -251,6 +251,11 @@ object Main {
         println("Run `pds register' to create an account.")
       }
 
+      case err: MiscError => {
+        err.exception.printStackTrace()
+        println(err.message)
+      }
+
       case err => {
         println(err.message)
       }
