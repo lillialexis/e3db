@@ -54,14 +54,11 @@ object Main {
     val email = readLineRequired("E-Mail Address", "")
     val url = readLineDefault("Service URL", DEFAULT_SERVICE_URL)
     var client = new PDSClient.Builder().setServiceUri(url).build()
-    val client_key = RsaJwkGenerator.generateJwk(KEY_PAIR_BITS)
-    client_key.setAlgorithm(KeyManagementAlgorithmIdentifiers.RSA1_5)
-    val access_key = OctJwkGenerator.generateJwk(ACCESS_KEY_BITS)
 
-    val req = RegisterRequest(email, client_key)
+    val mgr = ConfigFileKeyManager.create()
+    val req = RegisterRequest(email, mgr.getSigningKey)
     val resp = client.register(req)
-    val config = Config(client_key, access_key, resp.client_id, url,
-                        resp.api_key_id, resp.api_secret)
+    val config = Config(resp.client_id, url, resp.api_key_id, resp.api_secret)
 
     Config.save(opts.config_file, config)
 
@@ -70,7 +67,7 @@ object Main {
       .setServiceUri(config.api_url)
       .setApiKeyId(config.api_key_id)
       .setApiSecret(config.api_secret)
-      .setKeyManager(new StaticKeyManager(config.client_key, config.access_key))
+      .setKeyManager(mgr)
       .build()
 
     // Create an initial CAB with a single entry for the writer.
@@ -163,21 +160,21 @@ object Main {
         data_opt
       }
 
-    val obj = JsonParser.parse(data) match {
+    JsonParser.parse(data) match {
       case Left(err) => {
-        return DataError(s"Invalid data: ${err}").left
+        DataError(s"Invalid data: ${err}").left
       }
-      case Right(x) => x
+      case Right(obj) => {
+        val meta = new Meta(None, state.config.client_id,
+          cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, None, None)
+        val dataMap = obj.as[Map[String, String]].value.get
+        val record = new Record(meta, dataMap)
+        val record_id = state.client.writeRecord(record)
+
+        println(record_id)
+        ok
+      }
     }
-
-    val meta = new Meta(None, state.config.client_id,
-      cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, None, None)
-    val dataMap = obj.as[Map[String, String]].value.get
-    val record = new Record(meta, dataMap)
-    val record_id = state.client.writeRecord(record)
-
-    println(record_id)
-    ok
   }
 
   /** Read a CAB from the PDS and print it. */
@@ -235,7 +232,7 @@ object Main {
           .setServiceUri(config.api_url)
           .setApiKeyId(config.api_key_id)
           .setApiSecret(config.api_secret)
-          .setKeyManager(new StaticKeyManager(config.client_key, config.access_key))
+          .setKeyManager(ConfigFileKeyManager.get())
           .build()
         res <- run(opts, client, config)
       } yield res
@@ -243,9 +240,13 @@ object Main {
   }
 
   def main(args: Array[String]) {
-    CLIError.handle {
+    (try {
       mainOpts(OptionParser.parse(args))
-    }.leftMap {
+    }
+    catch {
+      case e: com.tozny.pds.client.ClientError => ClientError(e.getMessage, e).left
+      case e: Exception => MiscError(e.getMessage, e).left
+    }).leftMap {
       case err: ConfigError => {
         println(err.message)
         println("Run `pds register' to create an account.")
@@ -253,7 +254,6 @@ object Main {
 
       case err: MiscError => {
         err.exception.printStackTrace()
-        println(err.message)
       }
 
       case err => {

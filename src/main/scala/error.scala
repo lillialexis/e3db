@@ -17,7 +17,7 @@ sealed trait CLIError {
 }
 
 case class ConfigError(message: String) extends CLIError
-case class ClientError(message: String) extends CLIError
+case class ClientError(message: String, exception: Throwable) extends CLIError
 case class DataError(message: String) extends CLIError
 case class ServiceError(message: String) extends CLIError
 case class MiscError(message: String, exception: Throwable) extends CLIError
@@ -29,7 +29,7 @@ case class MiscError(message: String, exception: Throwable) extends CLIError
 object CLIError {
   def handle[A](f: => A): \/[CLIError, A] =
     \/.fromTryCatchNonFatal(f).leftMap {
-      case e: PDSClientError => ClientError(e.getMessage)
+      case e: PDSClientError => ClientError(e.getMessage, e)
       case e => MiscError(e.getMessage, e)
     }
 }
