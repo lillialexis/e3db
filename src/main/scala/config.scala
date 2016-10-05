@@ -23,8 +23,6 @@ import org.jose4j.jwk._
 
 /** Configuration file for the PDS CLI. */
 case class Config (
-  client_key: PublicJsonWebKey,
-  access_key: OctetSequenceJsonWebKey,
   client_id: UUID,
   api_url: String,
   api_key_id: String,
@@ -32,41 +30,6 @@ case class Config (
 )
 
 object Config {
-  /** Size in bits of the generated RSA key pair. */
-  final val KEY_PAIR_BITS = 3072
-
-  /** JSON codec for a jose4j {@code PublicJsonWebKey}. */
-  implicit def PublicJWKCodec: CodecJson[PublicJsonWebKey] =
-    CodecJson(
-      (jwk: PublicJsonWebKey) => {
-        val params = jwk.toParams(JsonWebKey.OutputControlLevel.INCLUDE_PRIVATE)
-        Json.jObject(params.foldLeft(JsonObject.empty) {
-          case (json, (name, value)) =>
-            json + (name, jString(value.toString))
-        })
-      },
-      c => {
-        val params = c.focus.objectOrEmpty.toMap.mapValues(_.stringOrEmpty)
-        DecodeResult.ok(PublicJsonWebKey.Factory.newPublicJwk(params))
-      }
-    )
-
-  /** JSON codec for a jose4j {@code OctetSequenceJsonWebKey}. */
-  implicit def OctetJWKCodec: CodecJson[OctetSequenceJsonWebKey] =
-    CodecJson(
-      (jwk: OctetSequenceJsonWebKey) => {
-        val params = jwk.toParams(JsonWebKey.OutputControlLevel.INCLUDE_PRIVATE)
-        Json.jObject(params.foldLeft(JsonObject.empty) {
-          case (json, (name, value)) =>
-            json + (name, jString(value.toString))
-        })
-      },
-      c => {
-        val params = c.focus.objectOrEmpty.toMap.mapValues(_.stringOrEmpty)
-        DecodeResult.ok(new OctetSequenceJsonWebKey(params))
-      }
-    )
-
   /** Encode a {@code java.util.UUID} as a JSON string. */
   implicit def UUIDEncodeJson: EncodeJson[UUID] =
     EncodeJson(a => jString(a.toString))
@@ -77,9 +40,9 @@ object Config {
 
   /** JSON codec for the {@code Config} class. */
   implicit def ConfigJsonCodec: CodecJson[Config] =
-    casecodec6(Config.apply, Config.unapply)(
-      "client_key", "access_key", "client_id",
-      "api_url", "api_key_id", "api_secret")
+    casecodec4(Config.apply, Config.unapply)(
+      "client_id", "api_url", "api_key_id", "api_secret"
+    )
 
   /** Load configuration from {@code file}. */
   def load(file: Path): CLIError \/ Config = {
@@ -99,6 +62,7 @@ object Config {
     }
   }
 
+  // Used to test for Windows OS
   private val w = """(?i)(^Win).*""".r
 
   /** Save configuration to {@code file}. */
