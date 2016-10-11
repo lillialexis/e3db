@@ -56,8 +56,8 @@ object Main {
     val url = readLineDefault("Service URL", DEFAULT_SERVICE_URL)
     var client = new PDSClient.Builder().setServiceUri(url).build()
 
-    client_key.setAlgorithm(KeyManagementAlgorithmIdentifiers.RSA1_5)
-    val req = new RegisterRequest(email, client_key)
+    val mgr = ConfigFileKeyManager.create()
+    val req = new RegisterRequest(email, mgr.getSigningKey)
     val resp = client.register(req)
     val config = Config(resp.client_id, url, resp.api_key_id, resp.api_secret)
 
@@ -166,8 +166,8 @@ object Main {
         DataError(s"Invalid data: ${err}").left
       }
       case Right(obj) => {
-        val meta = new Meta(None, state.config.client_id,
-          cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, None, None)
+        val meta = new Meta(null, state.config.client_id,
+          cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, null, null)
         val dataMap = obj.as[Map[String, String]].value.get
         val record = new Record(meta, dataMap)
         val record_id = state.client.writeRecord(record)
@@ -177,14 +177,6 @@ object Main {
       }
     }
 
-    val meta = new Meta(null, state.config.client_id,
-      cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, null, null)
-    val dataMap = obj.as[Map[String, String]].value.get
-    val record = new Record(meta, dataMap)
-    val record_id = state.client.writeRecord(record)
-
-    println(record_id)
-    ok
   }
 
   /** Read a CAB from the PDS and print it. */
