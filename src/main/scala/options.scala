@@ -43,7 +43,7 @@ case class GetKey(client_id: UUID) extends Command
 sealed trait Sharing
 
 case class AddSharing(reader: UUID, ctype: String) extends Command with Sharing
-case class RemoveSharing(reader: UUID, ctype: Option[String]) extends Command with Sharing
+case class RemoveSharing(reader: UUID, ctype: String) extends Command with Sharing
 
 object OptionParser {
   /** Argument parser for UUID parameters. */
@@ -100,7 +100,7 @@ object OptionParser {
 
   private val denyOpts: Parser[Command] =
     (argument(parseUUID, metavar("READER_ID"), help("ID of reader.")) |@|
-      optional(argument(readStr, metavar("CONTENT_TYPE"), help("Type of content to stop sharing (if absent, stop sharing all content)."))))(RemoveSharing)
+     argument(readStr, metavar("CONTENT_TYPE"), help("Type of content to stop sharing.")))(RemoveSharing)
 
   // Default location of the PDS CLI config file.
   private val defaultConfigFile =

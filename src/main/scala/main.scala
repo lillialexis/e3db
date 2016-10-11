@@ -16,8 +16,9 @@ import scalaz._
 import scalaz.syntax.either._
 import argonaut.JsonParser
 import org.jose4j.jwk._
-import com.tozny.pds.client._
-import org.jose4j.jwe._
+import org.jose4j.jwe.KeyManagementAlgorithmIdentifiers
+
+import com.tozny.pds.client_java._
 
 object Main {
   private val ok = ().right
@@ -55,8 +56,8 @@ object Main {
     val url = readLineDefault("Service URL", DEFAULT_SERVICE_URL)
     var client = new PDSClient.Builder().setServiceUri(url).build()
 
-    val mgr = ConfigFileKeyManager.create()
-    val req = RegisterRequest(email, mgr.getSigningKey)
+    client_key.setAlgorithm(KeyManagementAlgorithmIdentifiers.RSA1_5)
+    val req = new RegisterRequest(email, client_key)
     val resp = client.register(req)
     val config = Config(resp.client_id, url, resp.api_key_id, resp.api_secret)
 
@@ -73,8 +74,8 @@ object Main {
     // Create an initial CAB with a single entry for the writer.
     val id = resp.client_id
     // user == writer == authorizer (for now)
-    val cab = Cab(CAB_VERSION, CabId(id), new java.util.ArrayList(),
-                  CabId(id), CabId(id))
+    val cab = new Cab(CAB_VERSION, new Cab.Id(id), new java.util.ArrayList(),
+                      new Cab.Id(id), new Cab.Id(id))
     client.putCab(id, id, cab)
 
     ok
@@ -93,7 +94,7 @@ object Main {
     printf("%-40s  %-12s  %s\n", "Record ID", "Producer", "Type")
     println("-" * 78)
     records.foreach { rec =>
-      printf("%-40s  %-12s  %s\n", rec.record_id.get,
+      printf("%-40s  %-12s  %s\n", rec.record_id,
              rec.writer_id.toString.slice(0, 8) + "...", rec.`type`)
     }
 
@@ -109,7 +110,7 @@ object Main {
         state.client.readRecord(cmd.record_id)
       }
 
-    printf("%-20s %s\n", "Record ID:", rec.meta.record_id.get)
+    printf("%-20s %s\n", "Record ID:", rec.meta.record_id)
     printf("%-20s %s\n", "Record Type:", rec.meta.`type`)
     printf("%-20s %s\n", "Writer ID:", rec.meta.writer_id)
     printf("%-20s %s\n", "User ID:", rec.meta.user_id)
@@ -129,24 +130,24 @@ object Main {
       case AddSharing(reader, content_type) => {
         val user_id = state.config.client_id    // assume writer == user for now
         state.client.authorizeReader(user_id, reader)
-        PolicyRequest(state.config.client_id,
+        new PolicyRequest(state.config.client_id,
           state.config.client_id,
           reader,
-          Allow(com.tozny.pds.client.Read()),
-          Some(content_type)
+          Policy.allow(Policy.READ),
+          content_type
         )
       }
       case RemoveSharing(reader, content_type) => {
-        PolicyRequest(state.config.client_id,
+        new PolicyRequest(state.config.client_id,
           state.config.client_id,
           reader,
-          Allow(com.tozny.pds.client.Read()),
+          Policy.deny(Policy.READ),
           content_type
         )
       }
     }
 
-    state.client.policy(req)
+    state.client.setPolicy(req)
     ok
   }
 
@@ -175,6 +176,15 @@ object Main {
         ok
       }
     }
+
+    val meta = new Meta(null, state.config.client_id,
+      cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, null, null)
+    val dataMap = obj.as[Map[String, String]].value.get
+    val record = new Record(meta, dataMap)
+    val record_id = state.client.writeRecord(record)
+
+    println(record_id)
+    ok
   }
 
   /** Read a CAB from the PDS and print it. */
@@ -190,8 +200,8 @@ object Main {
     printf("%-40s %s\n", "Reader ID", "Encrypted Access Key")
     println("-" * 78)
 
-    cab.pairs.foreach { case CabPair(client_id, eak) =>
-      printf("%-40s %s\n", client_id, eak)
+    cab.pairs.foreach { pair =>
+      printf("%-40s %s\n", pair.reader_id, pair.eak)
     }
 
     ok
@@ -242,10 +252,9 @@ object Main {
   def main(args: Array[String]) {
     (try {
       mainOpts(OptionParser.parse(args))
-    }
-    catch {
-      case e: com.tozny.pds.client.ClientError => ClientError(e.getMessage, e).left
-      case e: Exception => MiscError(e.getMessage, e).left
+    } catch {
+      case e: PDSClientError => ClientError(e.getMessage, e).left
+      case e: Exception      => MiscError(e.getMessage, e).left
     }).leftMap {
       case err: ConfigError => {
         println(err.message)

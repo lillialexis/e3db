@@ -10,7 +10,7 @@ package com.tozny.pds.cli
 import scalaz._
 import scalaz.syntax.either._
 
-import com.tozny.pds.client.{ClientError => PDSClientError}
+import com.tozny.pds.client_java.PDSClientError
 
 sealed trait CLIError {
   val message: String
