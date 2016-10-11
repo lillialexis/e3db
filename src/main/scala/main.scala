@@ -18,7 +18,7 @@ import argonaut.JsonParser
 import org.jose4j.jwk._
 import org.jose4j.jwe.KeyManagementAlgorithmIdentifiers
 
-import com.tozny.pds.client_java._
+import com.tozny.pds.client._
 
 object Main {
   private val ok = ().right
