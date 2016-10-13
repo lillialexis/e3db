@@ -7,6 +7,7 @@
 
 package com.tozny.pds.cli
 
+import java.io.FileOutputStream
 import java.nio.file.{Files, Paths}
 import javax.activation.MimetypesFileTypeMap
 
@@ -16,10 +17,12 @@ import scala.collection.JavaConversions._
 import scalaz._
 import scalaz.syntax.either._
 import argonaut.JsonParser
-import com.google.common.io.BaseEncoding
 import org.jose4j.jwk._
 import com.tozny.pds.client._
+import org.jose4j.base64url.Base64
 import org.jose4j.jwe._
+
+import scala.util.parsing.json.JSONObject
 
 object Main {
   private val ok = ().right
@@ -104,12 +107,43 @@ object Main {
 
   /** Read a record by ID. */
   private def do_read(state: State, cmd: Read): CLIError \/ Unit = {
-    val rec =
-      if (cmd.raw) {
-        state.client.readRawRecord(cmd.record_id)
+    if (cmd.raw) {
+      do_raw_read(state, cmd)
+    } else {
+      val rec = state.client.readRecord(cmd.record_id)
+
+      if (cmd.dest.isDefined) {
+        val stream = new FileOutputStream(cmd.dest.get)
+        try {
+          if (rec.data.keySet().contains("filename") && rec.data.keySet().contains("data")) {
+            stream.write(Base64.decode(rec.data("data")))
+          } else {
+            stream.write(JSONObject(rec.data.toMap).toString().getBytes())
+          }
+        } finally {
+          stream.close()
+        }
       } else {
-        state.client.readRecord(cmd.record_id)
+        printf("%-20s %s\n", "Record ID:", rec.meta.record_id.get)
+        printf("%-20s %s\n", "Record Type:", rec.meta.`type`)
+        printf("%-20s %s\n", "Writer ID:", rec.meta.writer_id)
+        printf("%-20s %s\n", "User ID:", rec.meta.user_id)
+        printf("\n")
+        printf("%-20s %s\n", "Field", "Value")
+        println("-" * 78)
+
+        rec.data.foreach { case (k, v) =>
+          printf("%-20s %s\n", k, v)
+        }
       }
+
+      ok
+    }
+  }
+
+  /** Read a record by ID without decrypting. */
+  private def do_raw_read(state: State, cmd: Read): CLIError \/ Unit = {
+    val rec = state.client.readRawRecord(cmd.record_id)
 
     printf("%-20s %s\n", "Record ID:", rec.meta.record_id.get)
     printf("%-20s %s\n", "Record Type:", rec.meta.`type`)
@@ -179,7 +213,7 @@ object Main {
       val dataMap = Map(
         "filename" -> data_opt.substring(1),
         "content-type" -> fileTypeMap.getContentType(data_opt.substring((1))),
-        "data" -> BaseEncoding.base64().encode(Files.readAllBytes(Paths.get(data_opt.substring(1))))
+        "data" -> Base64.encode(Files.readAllBytes(Paths.get(data_opt.substring(1))))
         )
 
       write(meta, dataMap)
