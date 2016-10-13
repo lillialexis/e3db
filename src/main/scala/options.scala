@@ -31,7 +31,8 @@ case class Options (
 sealed trait Command
 
 case class Read(dest: Option[String], raw: Boolean, record_id: UUID) extends Command
-case class Write(user_id: Option[UUID], file: Boolean, ctype: String, data: NonEmptyList[String]) extends Command
+case class Write(user_id: Option[UUID], ctype: String, data: NonEmptyList[String]) extends Command
+case class WriteFile(user_id: Option[UUID], ctype: String, filename: String) extends Command
 case class Ls(limit: Int, offset: Int) extends Command
 case object Register extends Command
 case object Info extends Command
@@ -75,9 +76,13 @@ object OptionParser {
   // Options for the `write` command:
   private val writeOpts: Parser[Command] =
     (optional(option[UUID](parseUUID, long("user"), help("Owning user of record"))) |@|
-     switch(short('f'), long("file"), help("Read a DATA-specified filename as a file rather than as JSON")) |@|
      strArgument(metavar("TYPE"), help("Record type")) |@|
      some(strArgument(metavar("DATA"), help("JSON data to store (@FILENAME to read from file)"))))(Write)
+
+  private val writeFileOpts: Parser[Command] =
+    (optional(option[UUID](parseUUID, long("user"), help("Owning user of record"))) |@|
+      strArgument(metavar("TYPE"), help("Record type")) |@|
+      strArgument(metavar("FILENAME"), help("Path to file to write to PDS")))(WriteFile)
 
   // Options for the `ls` command:
   private val lsOpts: Parser[Command] =
@@ -117,14 +122,15 @@ object OptionParser {
 
      // Subcommands:
      subparser[Command](
-       command("info",     info(pure(Info),            progDesc("Display configuration info"))),
-       command("read",     info(readOpts <*> helper,   progDesc("Read data from the PDS"))),
-       command("write",    info(writeOpts <*> helper,  progDesc("Write data to the PDS"))),
-       command("ls",       info(lsOpts <*> helper,     progDesc("List my records in the PDS"))),
-       command("register", info(pure(Register),        progDesc("Register an account with the PDS"))),
-       command("getcab",   info(getCabOpts <*> helper, progDesc("Retrieve a CAB from the PDS"))),
-       command("getkey",   info(getKeyOpts <*> helper, progDesc("Retrieve a client's public key"))),
-       command("share",    info(shareOpts <*> helper, progDesc("Start sharing records with the given user.")))/*,
+       command("info",      info(pure(Info),               progDesc("Display configuration info"))),
+       command("read",      info(readOpts <*> helper,      progDesc("Read data from the PDS"))),
+       command("write",     info(writeOpts <*> helper,     progDesc("Write data to the PDS"))),
+       command("writefile", info(writeFileOpts <*> helper, progDesc("Write a file to the PDS"))),
+       command("ls",        info(lsOpts <*> helper,        progDesc("List my records in the PDS"))),
+       command("register",  info(pure(Register),           progDesc("Register an account with the PDS"))),
+       command("getcab",    info(getCabOpts <*> helper,    progDesc("Retrieve a CAB from the PDS"))),
+       command("getkey",    info(getKeyOpts <*> helper,    progDesc("Retrieve a client's public key"))),
+       command("share",     info(shareOpts <*> helper,     progDesc("Start sharing records with the given user.")))/*,
        not yet working
        command("deny",     info(denyOpts <*> helper,  progDesc("Stop sharing records with the given user.")))*/
     ))(Options)

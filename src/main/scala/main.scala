@@ -188,14 +188,6 @@ object Main {
 
   /** Write a record given type and data. */
   private def do_write(state: State, cmd: Write): CLIError \/ Unit = {
-    def write(meta: Meta, data: Map[String, String]): CLIError \/ Unit = {
-      val record = new Record(meta, data)
-      val record_id = state.client.writeRecord(record)
-
-      println(record_id)
-      ok
-    }
-
     val data_opt = cmd.data.list.toList.mkString(" ")
     val data =
       if (data_opt.charAt(0) == '@') {
@@ -204,30 +196,42 @@ object Main {
         data_opt
       }
 
-    val meta = new Meta(None, state.config.client_id,
-      cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, None, None)
-
-    if (cmd.file) {
-      val fileTypeMap = new MimetypesFileTypeMap()
-
-      val dataMap = Map(
-        "filename" -> data_opt.substring(1),
-        "content-type" -> fileTypeMap.getContentType(data_opt.substring((1))),
-        "data" -> Base64.encode(Files.readAllBytes(Paths.get(data_opt.substring(1))))
-        )
-
-      write(meta, dataMap)
-    } else {
-      JsonParser.parse(data) match {
+    JsonParser.parse(data) match {
         case Left(err) => {
           DataError(s"Invalid data: ${err}").left
         }
         case Right(obj) => {
+          val meta = new Meta(None, state.config.client_id,
+            cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, None, None)
           val dataMap = obj.as[Map[String, String]].value.get
-          write(meta, dataMap)
+          val record = new Record(meta, dataMap)
+          val record_id = state.client.writeRecord(record)
+
+          println(record_id)
+          ok
         }
       }
-    }
+  }
+
+  /** Write a file */
+  private def do_file(state: State, cmd: WriteFile): CLIError \/ Unit = {
+    val data = Files.readAllBytes(Paths.get(cmd.filename))
+    val meta = new Meta(None, state.config.client_id,
+      cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, None, None)
+
+    val fileTypeMap = new MimetypesFileTypeMap()
+
+    val dataMap = Map(
+      "filename" -> cmd.filename,
+      "content-type" -> fileTypeMap.getContentType(cmd.filename),
+      "data" -> Base64.encode(data)
+    )
+
+    val record = new Record(meta, dataMap)
+    val record_id = state.client.writeRecord(record)
+
+    println(record_id)
+    ok
   }
 
   /** Read a CAB from the PDS and print it. */
@@ -266,6 +270,7 @@ object Main {
       case cmd : Ls => do_ls(state, cmd)
       case cmd : Read => do_read(state, cmd)
       case cmd : Write => do_write(state, cmd)
+      case cmd : WriteFile => do_file(state, cmd)
       case cmd : Sharing => do_share(state, cmd)
       case cmd : GetCab => do_getcab(state, cmd)
       case cmd : GetKey => do_getkey(state, cmd)
