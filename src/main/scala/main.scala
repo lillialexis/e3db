@@ -197,20 +197,20 @@ object Main {
       }
 
     JsonParser.parse(data) match {
-        case Left(err) => {
-          DataError(s"Invalid data: ${err}").left
-        }
-        case Right(obj) => {
-          val meta = new Meta(None, state.config.client_id,
-            cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, None, None)
-          val dataMap = obj.as[Map[String, String]].value.get
-          val record = new Record(meta, dataMap)
-          val record_id = state.client.writeRecord(record)
-
-          println(record_id)
-          ok
-        }
+      case Left(err) => {
+        DataError(s"Invalid data: ${err}").left
       }
+      case Right(obj) => {
+        val meta = new Meta(None, state.config.client_id,
+          cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, None, None)
+        val dataMap = obj.as[Map[String, String]].value.get
+        val record = new Record(meta, dataMap)
+        val record_id = state.client.writeRecord(record)
+
+        println(record_id)
+        ok
+      }
+    }
   }
 
   /** Write a file */
