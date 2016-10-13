@@ -54,17 +54,21 @@ object Main {
   private def do_register(opts: Options): CLIError \/ Unit = {
     val email = readLineRequired("E-Mail Address", "")
     val url = readLineDefault("Service URL", DEFAULT_SERVICE_URL)
-    var client = new PDSClient.Builder().setServiceUri(url).build()
-
     val mgr = ConfigFileKeyManager.create()
-    val req = new RegisterRequest(email, mgr.getSigningKey)
-    val resp = client.register(req)
+    val resp = new Registration.Builder()
+      .setServiceUri(url)
+      .setEmail(email)
+      .setPublicKey(PublicJsonWebKey.Factory.newPublicJwk(mgr.getPublicKey))
+      .build()
+      .register()
+
     val config = Config(resp.client_id, url, resp.api_key_id, resp.api_secret)
 
     Config.save(opts.config_file, config)
 
     // Create a new client with credentials so we can put an initial CAB.
-    client = new PDSClient.Builder()
+    val client = new PDSClient.Builder()
+      .setClientId(resp.client_id)
       .setServiceUri(config.api_url)
       .setApiKeyId(config.api_key_id)
       .setApiSecret(config.api_secret)
@@ -74,7 +78,7 @@ object Main {
     // Create an initial CAB with a single entry for the writer.
     val id = resp.client_id
     // user == writer == authorizer (for now)
-    val cab = new Cab(CAB_VERSION, new Cab.Id(id), new java.util.ArrayList(),
+    val cab = new Cab(Cab.Version.V1, new Cab.Id(id), new java.util.ArrayList(),
                       new Cab.Id(id), new Cab.Id(id))
     client.putCab(id, id, cab)
 
@@ -166,8 +170,9 @@ object Main {
         DataError(s"Invalid data: ${err}").left
       }
       case Right(obj) => {
-        val meta = new Meta(null, state.config.client_id,
-          cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, null, null)
+        val meta = new Meta(state.config.client_id,
+          cmd.user_id.getOrElse(state.config.client_id),
+          cmd.ctype)
         val dataMap = obj.as[Map[String, String]].value.get
         val record = new Record(meta, dataMap)
         val record_id = state.client.writeRecord(record)
