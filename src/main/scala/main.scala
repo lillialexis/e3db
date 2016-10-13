@@ -115,11 +115,7 @@ object Main {
       if (cmd.dest.isDefined) {
         val stream = new FileOutputStream(cmd.dest.get)
         try {
-          if (rec.data.keySet().contains("filename") && rec.data.keySet().contains("data")) {
-            stream.write(Base64.decode(rec.data("data")))
-          } else {
-            stream.write(JSONObject(rec.data.toMap).toString().getBytes())
-          }
+          stream.write(JSONObject(rec.data.toMap).toString().getBytes())
         } finally {
           stream.close()
         }
@@ -155,6 +151,21 @@ object Main {
 
     rec.data.foreach { case (k, v) =>
       printf("%-20s %s\n", k, v)
+    }
+
+    ok
+  }
+
+  /** Read a file by ID */
+  private def do_readfile(state: State, cmd: ReadFile): CLIError \/ Unit = {
+    val rec = state.client.readRecord(cmd.record_id)
+
+    val filename = cmd.dest.getOrElse(rec.data("filename"))
+    val stream = new FileOutputStream(filename)
+    try {
+      stream.write(Base64.decode(rec.data("data")))
+    } finally {
+      stream.close()
     }
 
     ok
@@ -214,7 +225,7 @@ object Main {
   }
 
   /** Write a file */
-  private def do_file(state: State, cmd: WriteFile): CLIError \/ Unit = {
+  private def do_writefile(state: State, cmd: WriteFile): CLIError \/ Unit = {
     val data = Files.readAllBytes(Paths.get(cmd.filename))
     val meta = new Meta(None, state.config.client_id,
       cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, None, None)
@@ -269,8 +280,9 @@ object Main {
     opts.command match {
       case cmd : Ls => do_ls(state, cmd)
       case cmd : Read => do_read(state, cmd)
+      case cmd : ReadFile => do_readfile(state, cmd)
       case cmd : Write => do_write(state, cmd)
-      case cmd : WriteFile => do_file(state, cmd)
+      case cmd : WriteFile => do_writefile(state, cmd)
       case cmd : Sharing => do_share(state, cmd)
       case cmd : GetCab => do_getcab(state, cmd)
       case cmd : GetKey => do_getkey(state, cmd)

@@ -31,6 +31,7 @@ case class Options (
 sealed trait Command
 
 case class Read(dest: Option[String], raw: Boolean, record_id: UUID) extends Command
+case class ReadFile(dest: Option[String], record_id: UUID) extends Command
 case class Write(user_id: Option[UUID], ctype: String, data: NonEmptyList[String]) extends Command
 case class WriteFile(user_id: Option[UUID], ctype: String, filename: String) extends Command
 case class Ls(limit: Int, offset: Int) extends Command
@@ -72,6 +73,10 @@ object OptionParser {
     (optional(strOption(long("dest"), help("File to write data to"))) |@|
      switch(short('r'), long("raw"), help("Output raw (encrypted) data")) |@|
      argument(parseUUID, metavar("RECORD_ID"), help("Record ID to read")))(Read)
+
+  private val readFileOpts: Parser[Command] =
+    (optional(strOption(long("dest"), help("Override the filename to write data to"))) |@|
+      argument(parseUUID, metavar("RECORD_ID"), help("Record ID to read")))(ReadFile)
 
   // Options for the `write` command:
   private val writeOpts: Parser[Command] =
@@ -124,6 +129,7 @@ object OptionParser {
      subparser[Command](
        command("info",      info(pure(Info),               progDesc("Display configuration info"))),
        command("read",      info(readOpts <*> helper,      progDesc("Read data from the PDS"))),
+       command("readfile",  info(readFileOpts <*> helper,  progDesc("Read a file from the PDS"))),
        command("write",     info(writeOpts <*> helper,     progDesc("Write data to the PDS"))),
        command("writefile", info(writeFileOpts <*> helper, progDesc("Write a file to the PDS"))),
        command("ls",        info(lsOpts <*> helper,        progDesc("List my records in the PDS"))),
