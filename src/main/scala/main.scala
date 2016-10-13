@@ -8,6 +8,7 @@
 package com.tozny.pds.cli
 
 import java.nio.file.{Files, Paths}
+import javax.activation.MimetypesFileTypeMap
 
 import scala.annotation.tailrec
 import scala.io.StdIn
@@ -15,6 +16,7 @@ import scala.collection.JavaConversions._
 import scalaz._
 import scalaz.syntax.either._
 import argonaut.JsonParser
+import com.google.common.io.BaseEncoding
 import org.jose4j.jwk._
 import com.tozny.pds.client._
 import org.jose4j.jwe._
@@ -152,6 +154,14 @@ object Main {
 
   /** Write a record given type and data. */
   private def do_write(state: State, cmd: Write): CLIError \/ Unit = {
+    def write(meta: Meta, data: Map[String, String]): CLIError \/ Unit = {
+      val record = new Record(meta, data)
+      val record_id = state.client.writeRecord(record)
+
+      println(record_id)
+      ok
+    }
+
     val data_opt = cmd.data.list.toList.mkString(" ")
     val data =
       if (data_opt.charAt(0) == '@') {
@@ -160,19 +170,28 @@ object Main {
         data_opt
       }
 
-    JsonParser.parse(data) match {
-      case Left(err) => {
-        DataError(s"Invalid data: ${err}").left
-      }
-      case Right(obj) => {
-        val meta = new Meta(None, state.config.client_id,
-          cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, None, None)
-        val dataMap = obj.as[Map[String, String]].value.get
-        val record = new Record(meta, dataMap)
-        val record_id = state.client.writeRecord(record)
+    val meta = new Meta(None, state.config.client_id,
+      cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, None, None)
 
-        println(record_id)
-        ok
+    if (cmd.file) {
+      val fileTypeMap = new MimetypesFileTypeMap()
+
+      val dataMap = Map(
+        "filename" -> data_opt.substring(1),
+        "content-type" -> fileTypeMap.getContentType(data_opt.substring((1))),
+        "data" -> BaseEncoding.base64().encode(Files.readAllBytes(Paths.get(data_opt.substring(1))))
+        )
+
+      write(meta, dataMap)
+    } else {
+      JsonParser.parse(data) match {
+        case Left(err) => {
+          DataError(s"Invalid data: ${err}").left
+        }
+        case Right(obj) => {
+          val dataMap = obj.as[Map[String, String]].value.get
+          write(meta, dataMap)
+        }
       }
     }
   }

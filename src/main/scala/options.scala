@@ -31,7 +31,7 @@ case class Options (
 sealed trait Command
 
 case class Read(dest: Option[String], raw: Boolean, record_id: UUID) extends Command
-case class Write(user_id: Option[UUID], ctype: String, data: NonEmptyList[String]) extends Command
+case class Write(user_id: Option[UUID], file: Boolean, ctype: String, data: NonEmptyList[String]) extends Command
 case class Ls(limit: Int, offset: Int) extends Command
 case object Register extends Command
 case object Info extends Command
@@ -75,6 +75,7 @@ object OptionParser {
   // Options for the `write` command:
   private val writeOpts: Parser[Command] =
     (optional(option[UUID](parseUUID, long("user"), help("Owning user of record"))) |@|
+     switch(short('f'), long("file"), help("Read a DATA-specified filename as a file rather than as JSON")) |@|
      strArgument(metavar("TYPE"), help("Record type")) |@|
      some(strArgument(metavar("DATA"), help("JSON data to store (@FILENAME to read from file)"))))(Write)
 
