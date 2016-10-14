@@ -120,16 +120,16 @@ object Main {
           stream.close()
         }
       } else {
-        printf("%-20s %s\n", "Record ID:", rec.meta.record_id.get)
-        printf("%-20s %s\n", "Record Type:", rec.meta.`type`)
-        printf("%-20s %s\n", "Writer ID:", rec.meta.writer_id)
-        printf("%-20s %s\n", "User ID:", rec.meta.user_id)
-        printf("\n")
-        printf("%-20s %s\n", "Field", "Value")
+        println(f"${"Record ID:"}%-20s ${rec.meta.record_id.get}")
+        println(f"${"Record Type:"}%-20s ${rec.meta.`type`}")
+        println(f"${"Writer ID:"}%-20s ${rec.meta.writer_id}")
+        println(f"${"User ID:"}%-20s ${rec.meta.user_id}")
+        println("")
+        println(f"${"Field"}%-20s Value")
         println("-" * 78)
 
         rec.data.foreach { case (k, v) =>
-          printf("%-20s %s\n", k, v)
+          println(f"$k%-20s $v")
         }
       }
 
