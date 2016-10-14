@@ -18,6 +18,8 @@ import scalaz._
 import scalaz.syntax.either._
 import argonaut.JsonParser
 import org.jose4j.jwk._
+import org.jose4j.jwe.KeyManagementAlgorithmIdentifiers
+
 import com.tozny.pds.client._
 import org.jose4j.base64url.Base64
 import org.jose4j.jwe._
@@ -58,17 +60,21 @@ object Main {
   private def do_register(opts: Options): CLIError \/ Unit = {
     val email = readLineRequired("E-Mail Address", "")
     val url = readLineDefault("Service URL", DEFAULT_SERVICE_URL)
-    var client = new PDSClient.Builder().setServiceUri(url).build()
-
     val mgr = ConfigFileKeyManager.create()
-    val req = RegisterRequest(email, mgr.getSigningKey)
-    val resp = client.register(req)
+    val resp = new Registration.Builder()
+      .setServiceUri(url)
+      .setEmail(email)
+      .setPublicKey(PublicJsonWebKey.Factory.newPublicJwk(mgr.getPublicKey))
+      .build()
+      .register()
+
     val config = Config(resp.client_id, url, resp.api_key_id, resp.api_secret)
 
     Config.save(opts.config_file, config)
 
     // Create a new client with credentials so we can put an initial CAB.
-    client = new PDSClient.Builder()
+    val client = new PDSClient.Builder()
+      .setClientId(resp.client_id)
       .setServiceUri(config.api_url)
       .setApiKeyId(config.api_key_id)
       .setApiSecret(config.api_secret)
@@ -78,8 +84,8 @@ object Main {
     // Create an initial CAB with a single entry for the writer.
     val id = resp.client_id
     // user == writer == authorizer (for now)
-    val cab = Cab(CAB_VERSION, CabId(id), new java.util.ArrayList(),
-                  CabId(id), CabId(id))
+    val cab = new Cab(Cab.Version.V1, new Cab.Id(id), new java.util.ArrayList(),
+                      new Cab.Id(id), new Cab.Id(id))
     client.putCab(id, id, cab)
 
     ok
@@ -98,7 +104,7 @@ object Main {
     printf("%-40s  %-12s  %s\n", "Record ID", "Producer", "Type")
     println("-" * 78)
     records.foreach { rec =>
-      printf("%-40s  %-12s  %s\n", rec.record_id.get,
+      printf("%-40s  %-12s  %s\n", rec.record_id,
              rec.writer_id.toString.slice(0, 8) + "...", rec.`type`)
     }
 
@@ -120,7 +126,7 @@ object Main {
           stream.close()
         }
       } else {
-        println(f"${"Record ID:"}%-20s ${rec.meta.record_id.get}")
+        println(f"${"Record ID:"}%-20s ${rec.meta.record_id}")
         println(f"${"Record Type:"}%-20s ${rec.meta.`type`}")
         println(f"${"Writer ID:"}%-20s ${rec.meta.writer_id}")
         println(f"${"User ID:"}%-20s ${rec.meta.user_id}")
@@ -141,12 +147,12 @@ object Main {
   private def do_raw_read(state: State, cmd: Read): CLIError \/ Unit = {
     val rec = state.client.readRawRecord(cmd.record_id)
 
-    printf("%-20s %s\n", "Record ID:", rec.meta.record_id.get)
-    printf("%-20s %s\n", "Record Type:", rec.meta.`type`)
-    printf("%-20s %s\n", "Writer ID:", rec.meta.writer_id)
-    printf("%-20s %s\n", "User ID:", rec.meta.user_id)
-    printf("\n")
-    printf("%-20s %s\n", "Field", "Value")
+    println(f"${"Record ID:"}%-20s ${rec.meta.record_id}")
+    println(f"${"Record Type:"}%-20s ${rec.meta.`type`}")
+    println(f"${"Writer ID:"}%-20s ${rec.meta.writer_id}")
+    println(f"${"User ID:"}%-20s ${rec.meta.user_id}")
+    println("")
+    println(f"${"Field"}%-20s Value")
     println("-" * 78)
 
     rec.data.foreach { case (k, v) =>
@@ -176,24 +182,24 @@ object Main {
       case AddSharing(reader, content_type) => {
         val user_id = state.config.client_id    // assume writer == user for now
         state.client.authorizeReader(user_id, reader)
-        PolicyRequest(state.config.client_id,
+        new PolicyRequest(state.config.client_id,
           state.config.client_id,
           reader,
-          Allow(com.tozny.pds.client.Read()),
-          Some(content_type)
+          Policy.allow(Policy.READ),
+          content_type
         )
       }
       case RemoveSharing(reader, content_type) => {
-        PolicyRequest(state.config.client_id,
+        new PolicyRequest(state.config.client_id,
           state.config.client_id,
           reader,
-          Allow(com.tozny.pds.client.Read()),
+          Policy.deny(Policy.READ),
           content_type
         )
       }
     }
 
-    state.client.policy(req)
+    state.client.setPolicy(req)
     ok
   }
 
@@ -212,8 +218,9 @@ object Main {
         DataError(s"Invalid data: ${err}").left
       }
       case Right(obj) => {
-        val meta = new Meta(None, state.config.client_id,
-          cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, None, None)
+        val meta = new Meta(state.config.client_id,
+          cmd.user_id.getOrElse(state.config.client_id),
+          cmd.ctype)
         val dataMap = obj.as[Map[String, String]].value.get
         val record = new Record(meta, dataMap)
         val record_id = state.client.writeRecord(record)
@@ -222,6 +229,7 @@ object Main {
         ok
       }
     }
+
   }
 
   /** Write a file */
@@ -258,8 +266,8 @@ object Main {
     printf("%-40s %s\n", "Reader ID", "Encrypted Access Key")
     println("-" * 78)
 
-    cab.pairs.foreach { case CabPair(client_id, eak) =>
-      printf("%-40s %s\n", client_id, eak)
+    cab.pairs.foreach { pair =>
+      printf("%-40s %s\n", pair.reader_id, pair.eak)
     }
 
     ok
@@ -312,10 +320,9 @@ object Main {
   def main(args: Array[String]) {
     (try {
       mainOpts(OptionParser.parse(args))
-    }
-    catch {
-      case e: com.tozny.pds.client.ClientError => ClientError(e.getMessage, e).left
-      case e: Exception => MiscError(e.getMessage, e).left
+    } catch {
+      case e: PDSClientError => ClientError(e.getMessage, e).left
+      case e: Exception      => MiscError(e.getMessage, e).left
     }).leftMap {
       case err: ConfigError => {
         println(err.message)
