@@ -235,8 +235,9 @@ object Main {
   /** Write a file */
   private def do_writefile(state: State, cmd: WriteFile): CLIError \/ Unit = {
     val data = Files.readAllBytes(Paths.get(cmd.filename))
-    val meta = new Meta(None, state.config.client_id,
-      cmd.user_id.getOrElse(state.config.client_id), cmd.ctype, None, None)
+    val meta = new Meta(state.config.client_id,
+      cmd.user_id.getOrElse(state.config.client_id),
+      cmd.ctype)
 
     val fileTypeMap = new MimetypesFileTypeMap()
 
