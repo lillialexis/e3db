@@ -163,7 +163,7 @@ object Main {
     val filename = cmd.dest.getOrElse(rec.data("filename"))
     val stream = new FileOutputStream(filename)
     try {
-      stream.write(Base64.decode(rec.data("data")))
+      stream.write(Base64.decode(rec.data("contents")))
     } finally {
       stream.close()
     }
@@ -235,7 +235,7 @@ object Main {
     val dataMap = Map(
       "filename" -> cmd.filename,
       "content-type" -> fileTypeMap.getContentType(cmd.filename),
-      "data" -> Base64.encode(data)
+      "contents" -> Base64.encode(data)
     )
 
     val record = new Record(meta, dataMap)
