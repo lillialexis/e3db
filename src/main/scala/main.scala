@@ -7,7 +7,9 @@
 
 package com.tozny.pds.cli
 
+import java.io.FileOutputStream
 import java.nio.file.{Files, Paths}
+import javax.activation.MimetypesFileTypeMap
 
 import scala.annotation.tailrec
 import scala.io.StdIn
@@ -19,6 +21,10 @@ import org.jose4j.jwk._
 import org.jose4j.jwe.KeyManagementAlgorithmIdentifiers
 
 import com.tozny.pds.client._
+import org.jose4j.base64url.Base64
+import org.jose4j.jwe._
+
+import scala.util.parsing.json.JSONObject
 
 object Main {
   private val ok = ().right
@@ -107,23 +113,65 @@ object Main {
 
   /** Read a record by ID. */
   private def do_read(state: State, cmd: Read): CLIError \/ Unit = {
-    val rec =
-      if (cmd.raw) {
-        state.client.readRawRecord(cmd.record_id)
+    if (cmd.raw) {
+      do_raw_read(state, cmd)
+    } else {
+      val rec = state.client.readRecord(cmd.record_id)
+
+      if (cmd.dest.isDefined) {
+        val stream = new FileOutputStream(cmd.dest.get)
+        try {
+          stream.write(JSONObject(rec.data.toMap).toString().getBytes())
+        } finally {
+          stream.close()
+        }
       } else {
-        state.client.readRecord(cmd.record_id)
+        println(f"${"Record ID:"}%-20s ${rec.meta.record_id}")
+        println(f"${"Record Type:"}%-20s ${rec.meta.`type`}")
+        println(f"${"Writer ID:"}%-20s ${rec.meta.writer_id}")
+        println(f"${"User ID:"}%-20s ${rec.meta.user_id}")
+        println("")
+        println(f"${"Field"}%-20s Value")
+        println("-" * 78)
+
+        rec.data.foreach { case (k, v) =>
+          println(f"$k%-20s $v")
+        }
       }
 
-    printf("%-20s %s\n", "Record ID:", rec.meta.record_id)
-    printf("%-20s %s\n", "Record Type:", rec.meta.`type`)
-    printf("%-20s %s\n", "Writer ID:", rec.meta.writer_id)
-    printf("%-20s %s\n", "User ID:", rec.meta.user_id)
-    printf("\n")
-    printf("%-20s %s\n", "Field", "Value")
+      ok
+    }
+  }
+
+  /** Read a record by ID without decrypting. */
+  private def do_raw_read(state: State, cmd: Read): CLIError \/ Unit = {
+    val rec = state.client.readRawRecord(cmd.record_id)
+
+    println(f"${"Record ID:"}%-20s ${rec.meta.record_id}")
+    println(f"${"Record Type:"}%-20s ${rec.meta.`type`}")
+    println(f"${"Writer ID:"}%-20s ${rec.meta.writer_id}")
+    println(f"${"User ID:"}%-20s ${rec.meta.user_id}")
+    println("")
+    println(f"${"Field"}%-20s Value")
     println("-" * 78)
 
     rec.data.foreach { case (k, v) =>
       printf("%-20s %s\n", k, v)
+    }
+
+    ok
+  }
+
+  /** Read a file by ID */
+  private def do_readfile(state: State, cmd: ReadFile): CLIError \/ Unit = {
+    val rec = state.client.readRecord(cmd.record_id)
+
+    val filename = cmd.dest.getOrElse(rec.data("filename"))
+    val stream = new FileOutputStream(filename)
+    try {
+      stream.write(Base64.decode(rec.data("contents")))
+    } finally {
+      stream.close()
     }
 
     ok
@@ -184,6 +232,28 @@ object Main {
 
   }
 
+  /** Write a file */
+  private def do_writefile(state: State, cmd: WriteFile): CLIError \/ Unit = {
+    val data = Files.readAllBytes(Paths.get(cmd.filename))
+    val meta = new Meta(state.config.client_id,
+      cmd.user_id.getOrElse(state.config.client_id),
+      cmd.ctype)
+
+    val fileTypeMap = new MimetypesFileTypeMap()
+
+    val dataMap = Map(
+      "filename" -> cmd.filename,
+      "content-type" -> fileTypeMap.getContentType(cmd.filename),
+      "contents" -> Base64.encode(data)
+    )
+
+    val record = new Record(meta, dataMap)
+    val record_id = state.client.writeRecord(record)
+
+    println(record_id)
+    ok
+  }
+
   /** Read a CAB from the PDS and print it. */
   private def do_getcab(state: State, cmd: GetCab): CLIError \/ Unit = {
     val cab = state.client.getCab(cmd.writer_id, cmd.user_id)
@@ -219,7 +289,9 @@ object Main {
     opts.command match {
       case cmd : Ls => do_ls(state, cmd)
       case cmd : Read => do_read(state, cmd)
+      case cmd : ReadFile => do_readfile(state, cmd)
       case cmd : Write => do_write(state, cmd)
+      case cmd : WriteFile => do_writefile(state, cmd)
       case cmd : Sharing => do_share(state, cmd)
       case cmd : GetCab => do_getcab(state, cmd)
       case cmd : GetKey => do_getkey(state, cmd)
