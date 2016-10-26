@@ -24,6 +24,21 @@ To install the PDS CLI, download the software from:
 Unzip the `pds-cli-0.3.zip` file in a convenient location and add
 the `pds-cli-0.3/bin` directory to your `PATH`.
 
+## Install JCE Unlimited Strength Policy
+
+Most installations of the Java runtime do not ship with the
+necessary policy configuration to allow the key sizes used by
+the Tozny PDS.
+
+To download and install the unlimited strength JCE policy files,
+visit the following URL:
+
+    http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html
+
+This ZIP file contains the policy files and a `README.txt`
+with instructions on how where to place the files in the Java
+runtime data folder.
+
 ## Registration
 
 Before you can use the PDS from your Java application, you must
