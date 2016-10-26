@@ -54,7 +54,7 @@ server URL---accept the default by pressing return):
 
 ```
 E-Mail Address []: foo@example.com<RETURN>
-Service URL [https://api.dev.pds.tozny.com/v1]: <RETURN>
+Service URL [https://api.staging.pds.tozny.com/v1]: <RETURN>
 ```
 
 Tozny will send a confirmation e-mail to the address entered
