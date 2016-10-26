@@ -46,6 +46,7 @@ sealed trait Sharing
 
 case class AddSharing(reader: UUID, ctype: String) extends Command with Sharing
 case class RemoveSharing(reader: UUID, ctype: String) extends Command with Sharing
+case class RevokeSharing(reader: UUID) extends Command
 
 object OptionParser {
   /** Argument parser for UUID parameters. */
@@ -113,6 +114,9 @@ object OptionParser {
     (argument(parseUUID, metavar("READER_ID"), help("ID of reader.")) |@|
      argument(readStr, metavar("CONTENT_TYPE"), help("Type of content to stop sharing.")))(RemoveSharing)
 
+  private val revokeOpts: Parser[Command] =
+    (argument(parseUUID, metavar("READER_ID"), help("ID of reader."))).map(RevokeSharing.apply)
+
   // Default location of the PDS CLI config file.
   private val defaultConfigFile =
     Paths.get(System.getProperty("user.home"), ".tozny", "pds.json")
@@ -138,7 +142,8 @@ object OptionParser {
        command("getkey",    info(getKeyOpts <*> helper,    progDesc("Retrieve a client's public key"))),
        command("share",     info(shareOpts <*> helper,     progDesc("Start sharing records with the given user.")))/*,
        not yet working
-       command("deny",     info(denyOpts <*> helper,  progDesc("Stop sharing records with the given user.")))*/
+       command("deny",     info(denyOpts <*> helper,  progDesc("Stop sharing records with the given user.")))*/,
+       command("revoke",    info(revokeOpts <*> helper,      progDesc("Revoke all sharing with the given reader.")))
     ))(Options)
 
   private val opts = info(parseOpts <*> helper, progDesc("Tozny Personal Data Service CLI"))

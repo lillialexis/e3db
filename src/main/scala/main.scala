@@ -203,6 +203,13 @@ object Main {
     ok
   }
 
+  private def do_revoke(state: State, cmd: RevokeSharing): CLIError \/ Unit = {
+    val user_id = state.config.client_id // assume writer == user for now
+    state.client.revokeSharing(user_id, cmd.reader, user_id)
+
+    ok
+  }
+
   /** Write a record given type and data. */
   private def do_write(state: State, cmd: Write): CLIError \/ Unit = {
     val data_opt = cmd.data.list.toList.mkString(" ")
@@ -293,6 +300,7 @@ object Main {
       case cmd : Write => do_write(state, cmd)
       case cmd : WriteFile => do_writefile(state, cmd)
       case cmd : Sharing => do_share(state, cmd)
+      case cmd : RevokeSharing => do_revoke(state, cmd)
       case cmd : GetCab => do_getcab(state, cmd)
       case cmd : GetKey => do_getkey(state, cmd)
       case       Info => do_info(state)
