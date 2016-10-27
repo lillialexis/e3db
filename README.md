@@ -9,6 +9,11 @@ writing, and listing JSON data stored securely in the cloud.
 
 ## Installation
 
+(Note: These install instructions contain examples for Mac OS
+and Linux users. The process is similar on Windows---build steps
+for Windows users will be provided in another document in a future
+release.)
+
 The Tozny PDS software contains the following components:
 
 - A Command Line Interface (CLI) tool used for registering
@@ -17,12 +22,36 @@ The Tozny PDS software contains the following components:
 - A Java SDK for connecting to the PDS and performing
   database operations from Java applications or web services.
 
-To install the PDS CLI, download the software from:
+To obtain the source for the PDS CLI and example code, check
+out the Git repository by running:
 
-    https://github.com/tozny/pds/archive/release/pds-cli-0.3.zip
+    $ git clone https://github.com/tozny/pds
+    $ cd pds
 
-Unzip the `pds-cli-0.3.zip` file in a convenient location and add
-the `pds-cli-0.3/bin` directory to your `PATH`.
+Next, compile and package the PDS CLI using SBT. This will automatically
+fetch the PDS Client Library from our Maven repository:
+
+    $ ./sbt universal:packageBin
+
+(Note that it will take some time to install the Scala compiler and SBT
+runtime the first time the `sbt` script is run.)
+
+When this completes, the binary distribution will be located in:
+
+    target/universal/pds-cli-0.3.0.zip
+
+Unzip this file to any location and add this directory to your
+path. For example:
+
+    $ unzip target/universal/pds-cli-0.3.0.zip -d $HOME
+    $ export PATH=$PATH:$HOME/pds-cli-0.3.0/bin
+
+You should now be able to run the PDS CLI via the `pds` command:
+
+    $ pds --help
+    Usage: pds [-v|--verbose] [-c|--config FILENAME] COMMAND
+    Tozny Personal Data Service CLI
+    [...]
 
 ## Install JCE Unlimited Strength Policy
 
@@ -62,7 +91,8 @@ during the registration process. Simply click the link in the
 e-mail to complete the registration.
 
 After a successful registration, API credentials and other
-configuration will be written to the file `$HOME/.tozny/pds.json`.
+configuration will be written to the file `$HOME/.tozny/pds.json`,
+and can be displayed by running `pds info`.
 
 ## CLI Examples
 
@@ -185,15 +215,67 @@ client so they can decrypt the contents of each field.
 
 ## Code Examples
 
-### Importing the PDS Client Library
+The `pds` repository also contains example code showing simple
+Java code using the PDS client library. The Java example code
+lives at:
+
+    examples/src/main/java
+
+### Building the Example Code
+
+To build the PDS code examples with SBT, run:
+
+    $ ./sbt examples/compile
 
 ### Creating a PDS Client
+
+Each example class begins by creating a `PDSClient` object via the
+nested class `PDSClient.Builder`. Using a builder-style interface
+makes it easy to pass in the necessary configuration settings and
+credentials needed to set up the client.
+
+```java
+PDSClient client = new PDSClient.Builder()
+  .setClientId(clientId)
+  .setApiKeyId(apiKeyId)
+  .setApiSecret(apiSecret)
+  .setKeyManager(keyManager)
+  .setServiceUri("https://api.dev.pds.tozny.com/v1")
+  .build();
+```
+
+In the example code, parameters like `clientId` come from command-line
+arguments. In a production system, they would come from a configuration
+file, credential storage system, or some other location.
 
 ### Writing Records
 
 ### Listing Records
 
+Once the client API is configured, it is simple to list records visible
+to the client by calling `listRecords`:
+
+```java
+for (Meta meta : client.listRecords(100, 0)) {
+  System.out.printf("%-40s %s\n", meta.record_id, meta.type);
+}
+```
+
+For each record returned by `listRecords`, we receive an instance
+of `Meta`, which contains the following meta-information about each
+record in the data store:
+
+```java
+public class Meta {
+  public final UUID record_id;
+  public final UUID writer_id;
+  public final UUID user_id;
+  public final String type;
+  public final Date created;
+  public final Date last_modified;
+}
+```
+
 ### Reading Records
 
 ### Sharing Records
-

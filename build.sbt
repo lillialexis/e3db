@@ -42,3 +42,6 @@ libraryDependencies ++= Seq(
   // Tozny Libraries
   "com.tozny.pds" % "pds-client" % "0.3.1-SNAPSHOT"
 )
+
+val examples = project.in(file("examples"))
+
