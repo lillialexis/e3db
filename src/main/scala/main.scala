@@ -10,10 +10,12 @@ package com.tozny.pds.cli
 import java.io.FileOutputStream
 import java.nio.file.{Files, Paths}
 import javax.activation.MimetypesFileTypeMap
+import java.util.UUID
 
 import scala.annotation.tailrec
 import scala.io.StdIn
 import scala.collection.JavaConversions._
+
 import scalaz._
 import scalaz.syntax.either._
 import argonaut.JsonParser
@@ -29,8 +31,15 @@ import scala.util.parsing.json.JSONObject
 object Main {
   private val ok = ().right
 
+  private implicit class OptSyntax[A](opt: java.util.Optional[A]) {
+    def asScala(): Option[A] = {
+      if (opt != null && opt.isPresent) Option(opt.get)
+      else None
+    }
+  }
+
   /** State passed to each command handler. */
-  case class State(opts: Options, config: Config, client: PDSClient)
+  case class State(opts: Options, config: Config, client: Client)
 
   /** Read an interactive value with a default. */
   private def readLineDefault(prompt: String, default: String): String = {
@@ -60,7 +69,7 @@ object Main {
   private def do_register(opts: Options): CLIError \/ Unit = {
     val email = readLineRequired("E-Mail Address", "")
     val url = readLineDefault("Service URL", DEFAULT_SERVICE_URL)
-    val mgr = ConfigFileKeyManager.create()
+    val mgr = ConfigFileKeyManager.create(opts.config_file.getParent.resolve("pds_key.json").toFile)
     val resp = new Registration.Builder()
       .setServiceUri(url)
       .setEmail(email)
@@ -72,28 +81,12 @@ object Main {
 
     Config.save(opts.config_file, config)
 
-    // Create a new client with credentials so we can put an initial CAB.
-    val client = new PDSClient.Builder()
-      .setClientId(resp.client_id)
-      .setServiceUri(config.api_url)
-      .setApiKeyId(config.api_key_id)
-      .setApiSecret(config.api_secret)
-      .setKeyManager(mgr)
-      .build()
-
-    // Create an initial CAB with a single entry for the writer.
-    val id = resp.client_id
-    // user == writer == authorizer (for now)
-    val cab = new Cab(Cab.Version.V1, new Cab.Id(id), new java.util.ArrayList(),
-                      new Cab.Id(id), new Cab.Id(id))
-    client.putCab(id, id, cab)
-
     ok
   }
 
   /** Display configuration information. */
   private def do_info(state: State): CLIError \/ Unit = {
-    printf("%-20s %s\n", "Client ID:", state.config.client_id)
+    println(f"${"Client ID:"}%-20s ${state.config.client_id}")
     ok
   }
 
@@ -101,11 +94,10 @@ object Main {
   private def do_ls(state: State, cmd: Ls): CLIError \/ Unit = {
     val records = state.client.listRecords(cmd.limit, cmd.offset).toList
 
-    printf("%-40s  %-12s  %s\n", "Record ID", "Producer", "Type")
+    println(f"${"Record ID"}%-40s  ${"Producer"}%-12s  ${"Type"}")
     println("-" * 78)
     records.foreach { rec =>
-      printf("%-40s  %-12s  %s\n", rec.record_id,
-             rec.writer_id.toString.slice(0, 8) + "...", rec.`type`)
+      println(f"${rec.record_id}%-40s  ${rec.writer_id.toString.slice(0, 8) + "..."}%-12s  ${rec.`type`}")
     }
 
     ok
@@ -116,28 +108,31 @@ object Main {
     if (cmd.raw) {
       do_raw_read(state, cmd)
     } else {
-      val rec = state.client.readRecord(cmd.record_id)
+      state.client.readRecord(cmd.record_id).asScala.map({ rec =>
 
-      if (cmd.dest.isDefined) {
-        val stream = new FileOutputStream(cmd.dest.get)
-        try {
-          stream.write(JSONObject(rec.data.toMap).toString().getBytes())
-        } finally {
-          stream.close()
-        }
-      } else {
-        println(f"${"Record ID:"}%-20s ${rec.meta.record_id}")
-        println(f"${"Record Type:"}%-20s ${rec.meta.`type`}")
-        println(f"${"Writer ID:"}%-20s ${rec.meta.writer_id}")
-        println(f"${"User ID:"}%-20s ${rec.meta.user_id}")
-        println("")
-        println(f"${"Field"}%-20s Value")
-        println("-" * 78)
+        if (cmd.dest.isDefined) {
+          val stream = new FileOutputStream(cmd.dest.get)
+          try {
+            stream.write(JSONObject(rec.data.toMap).toString().getBytes())
+          } finally {
+            stream.close()
+          }
+        } else {
+          println(f"${"Record ID:"}%-20s ${rec.meta.record_id}")
+          println(f"${"Record Type:"}%-20s ${rec.meta.`type`}")
+          println(f"${"Writer ID:"}%-20s ${rec.meta.writer_id}")
+          println(f"${"User ID:"}%-20s ${rec.meta.user_id}")
+          println("")
+          println(f"${"Field"}%-20s Value")
+          println("-" * 78)
 
-        rec.data.foreach { case (k, v) =>
-          println(f"$k%-20s $v")
+          rec.data.foreach { case (k, v) =>
+            println(f"${k}%-20s ${v}")
+          }
         }
-      }
+      }).getOrElse({
+        println(f"${"Record ID:"}%-20s ${cmd.record_id} not found.")
+      })
 
       ok
     }
@@ -145,34 +140,38 @@ object Main {
 
   /** Read a record by ID without decrypting. */
   private def do_raw_read(state: State, cmd: Read): CLIError \/ Unit = {
-    val rec = state.client.readRawRecord(cmd.record_id)
+    val rec = state.client.readRawRecord(cmd.record_id).asScala.map({ rec =>
 
-    println(f"${"Record ID:"}%-20s ${rec.meta.record_id}")
-    println(f"${"Record Type:"}%-20s ${rec.meta.`type`}")
-    println(f"${"Writer ID:"}%-20s ${rec.meta.writer_id}")
-    println(f"${"User ID:"}%-20s ${rec.meta.user_id}")
-    println("")
-    println(f"${"Field"}%-20s Value")
-    println("-" * 78)
+      println(f"${"Record ID:"}%-20s ${rec.meta.record_id}")
+      println(f"${"Record Type:"}%-20s ${rec.meta.`type`}")
+      println(f"${"Writer ID:"}%-20s ${rec.meta.writer_id}")
+      println(f"${"User ID:"}%-20s ${rec.meta.user_id}")
+      println("")
+      println(f"${"Field"}%-20s Value")
+      println("-" * 78)
 
-    rec.data.foreach { case (k, v) =>
-      printf("%-20s %s\n", k, v)
-    }
-
+      rec.data.foreach { case (k, v) =>
+        println(f"${k}%-20s ${v}")
+      }
+    }).getOrElse(
+      println(f"${"Record ID:"}%-20s ${cmd.record_id} not found.")
+    )
     ok
   }
 
   /** Read a file by ID */
   private def do_readfile(state: State, cmd: ReadFile): CLIError \/ Unit = {
-    val rec = state.client.readRecord(cmd.record_id)
-
-    val filename = cmd.dest.getOrElse(rec.data("filename"))
-    val stream = new FileOutputStream(filename)
-    try {
-      stream.write(Base64.decode(rec.data("contents")))
-    } finally {
-      stream.close()
-    }
+    state.client.readRecord(cmd.record_id).asScala.map({ rec =>
+      val filename = cmd.dest.getOrElse(rec.data("filename"))
+      val stream = new FileOutputStream(filename)
+      try {
+        stream.write(Base64.decode(rec.data("contents")))
+      } finally {
+        stream.close()
+      }
+    }).getOrElse(
+      println(f"${"Record ID:"}%-20s ${cmd.record_id} not found.")
+    )
 
     ok
   }
@@ -181,7 +180,7 @@ object Main {
     val req = cmd match {
       case AddSharing(reader, content_type) => {
         val user_id = state.config.client_id    // assume writer == user for now
-        state.client.authorizeReader(user_id, reader)
+        state.client.authorizeReader(user_id, reader, content_type)
         new PolicyRequest(state.config.client_id,
           state.config.client_id,
           reader,
@@ -200,6 +199,13 @@ object Main {
     }
 
     state.client.setPolicy(req)
+    ok
+  }
+
+  private def do_revoke(state: State, cmd: RevokeSharing): CLIError \/ Unit = {
+    val user_id = state.config.client_id // assume writer == user for now
+    state.client.revokeSharing(user_id, user_id, cmd.reader)
+
     ok
   }
 
@@ -256,34 +262,38 @@ object Main {
 
   /** Read a CAB from the PDS and print it. */
   private def do_getcab(state: State, cmd: GetCab): CLIError \/ Unit = {
-    val cab = state.client.getCab(cmd.writer_id, cmd.user_id)
+    state.client.getCab(cmd.writer_id, cmd.user_id, cmd.record_type).asScala.map({ cab =>
 
-    printf("%-20s %s\n", "CAB Version:", cab.version)
-    printf("%-20s %s\n", "Authorizer ID:", cab.authorizer.id)
-    printf("%-20s %s\n", "Writer ID:", cab.writer.id)
-    printf("%-20s %s\n", "User ID:", cab.user.id)
+      println(f"${"CAB Version:"}%-20s ${cab.version}")
+      println(f"${"Authorizer ID:"}%-20s ${cab.authorizer.id}")
+      println(f"${"Writer ID:"}%-20s ${cab.writer.id}")
+      println(f"${"User ID:"}%-20s ${cab.user.id}")
 
-    printf("\n")
-    printf("%-40s %s\n", "Reader ID", "Encrypted Access Key")
-    println("-" * 78)
+      println(f"\n${"Reader ID"}%-40s ${"Encrypted Access Key"}")
+      println("-" * 78)
 
-    cab.pairs.foreach { pair =>
-      printf("%-40s %s\n", pair.reader_id, pair.eak)
-    }
+      cab.pairs.foreach { pair =>
+        println(f"${pair.reader_id}%-40s ${pair.eak}")
+      }
+
+    }).getOrElse(
+      println("CAB not found.")
+    )
 
     ok
   }
 
   /** Read a client's public key from the PDS and print it. */
   private def do_getkey(state: State, cmd: GetKey): CLIError \/ Unit = {
-    val keyJson = state.client.getClientKey(cmd.client_id).toJson
-    \/.fromEither(JsonParser.parse(keyJson)).map { obj =>
-      println(obj.spaces2)
-    }.leftMap(DataError)
+    state.client.getClientKey(cmd.client_id).asScala.map(_.toJson).map({ keyJson =>
+      \/.fromEither(JsonParser.parse(keyJson)).map { obj =>
+        println(obj.spaces2)
+      }.leftMap(DataError)
+    }).getOrElse(DataError(s"Key not found").left)
   }
 
   /** Process the requested command, synchronously. */
-  private def run(opts: Options, client: PDSClient, config: Config): CLIError \/ Unit = {
+  private def run(opts: Options, client: Client, config: Config): CLIError \/ Unit = {
     val state = State(opts, config, client)
 
     opts.command match {
@@ -293,6 +303,7 @@ object Main {
       case cmd : Write => do_write(state, cmd)
       case cmd : WriteFile => do_writefile(state, cmd)
       case cmd : Sharing => do_share(state, cmd)
+      case cmd : RevokeSharing => do_revoke(state, cmd)
       case cmd : GetCab => do_getcab(state, cmd)
       case cmd : GetKey => do_getkey(state, cmd)
       case       Info => do_info(state)
@@ -300,18 +311,25 @@ object Main {
     }
   }
 
-  private def mainOpts(opts: Options): CLIError \/ Unit = {
+  private def runWithOpts(opts: Options): CLIError \/ Unit = {
     if (opts.command == Register) {
       do_register(opts)
     } else {
       for {
         config <- Config.load(opts.config_file)
-        client = new PDSClient.Builder()
+        keyManager = ConfigFileKeyManager.get(opts.config_file.getParent.resolve("pds_key.json").toFile)
+        cabManager = new ConfigCabManagerBuilder()
+          .setKeyManager(keyManager)
+          .setClientId(config.client_id)
+          .setConfigDir(new ConfigDir(opts.config_file.getParent.toFile))
+          .build()
+        client = new HttpPDSClientBuilder()
           .setClientId(config.client_id)
           .setServiceUri(config.api_url)
           .setApiKeyId(config.api_key_id)
           .setApiSecret(config.api_secret)
-          .setKeyManager(ConfigFileKeyManager.get())
+          .setKeyManager(keyManager)
+          .setCabManager(cabManager)
           .build()
         res <- run(opts, client, config)
       } yield res
@@ -320,7 +338,7 @@ object Main {
 
   def main(args: Array[String]) {
     (try {
-      mainOpts(OptionParser.parse(args))
+      runWithOpts(OptionParser.parse(args))
     } catch {
       case e: PDSClientError => ClientError(e.getMessage, e).left
       case e: Exception      => MiscError(e.getMessage, e).left

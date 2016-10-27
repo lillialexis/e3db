@@ -6,7 +6,7 @@
 //
 
 organization := "com.tozny.pds"
-version := "0.2.0-SNAPSHOT"
+version := "0.3.1-SNAPSHOT"
 
 scalaVersion := "2.11.8"
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint")
@@ -40,5 +40,5 @@ libraryDependencies ++= Seq(
   "org.bitbucket.b_c" % "jose4j" % "0.5.2",
 
   // Tozny Libraries
-  "com.tozny.pds" % "pds-client" % "0.2.1-SNAPSHOT"
+  "com.tozny.pds" % "pds-client" % "0.3.1-SNAPSHOT"
 )

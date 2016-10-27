@@ -39,13 +39,14 @@ case object Register extends Command
 case object Info extends Command
 
 // TODO: These should arguably be subcommands like "pds cab get"...
-case class GetCab(writer_id: UUID, user_id: UUID) extends Command
+case class GetCab(writer_id: UUID, user_id: UUID, record_type: String) extends Command
 case class GetKey(client_id: UUID) extends Command
 
 sealed trait Sharing
 
 case class AddSharing(reader: UUID, ctype: String) extends Command with Sharing
 case class RemoveSharing(reader: UUID, ctype: String) extends Command with Sharing
+case class RevokeSharing(reader: UUID) extends Command
 
 object OptionParser {
   /** Argument parser for UUID parameters. */
@@ -99,7 +100,8 @@ object OptionParser {
   // Options for the `getcab` command:
   private val getCabOpts: Parser[Command] =
     (argument[UUID](parseUUID, metavar("WRITER_ID"), help("ID of writer")) |@|
-     argument[UUID](parseUUID, metavar("USER_ID"),   help("ID of user")))(GetCab)
+     argument[UUID](parseUUID, metavar("USER_ID"),   help("ID of user")) |@|
+      strArgument(metavar("RECORD_TYPE"), help("Type of records.")))(GetCab)
 
  // Options for the `getkey` command:
  private val getKeyOpts: Parser[Command] =
@@ -112,6 +114,9 @@ object OptionParser {
   private val denyOpts: Parser[Command] =
     (argument(parseUUID, metavar("READER_ID"), help("ID of reader.")) |@|
      argument(readStr, metavar("CONTENT_TYPE"), help("Type of content to stop sharing.")))(RemoveSharing)
+
+  private val revokeOpts: Parser[Command] =
+    (argument(parseUUID, metavar("READER_ID"), help("ID of reader."))).map(RevokeSharing.apply)
 
   // Default location of the PDS CLI config file.
   private val defaultConfigFile =
@@ -138,7 +143,8 @@ object OptionParser {
        command("getkey",    info(getKeyOpts <*> helper,    progDesc("Retrieve a client's public key"))),
        command("share",     info(shareOpts <*> helper,     progDesc("Start sharing records with the given user.")))/*,
        not yet working
-       command("deny",     info(denyOpts <*> helper,  progDesc("Stop sharing records with the given user.")))*/
+       command("deny",     info(denyOpts <*> helper,  progDesc("Stop sharing records with the given user.")))*/,
+       command("revoke",    info(revokeOpts <*> helper,      progDesc("Revoke all sharing with the given reader.")))
     ))(Options)
 
   private val opts = info(parseOpts <*> helper, progDesc("Tozny Personal Data Service CLI"))
