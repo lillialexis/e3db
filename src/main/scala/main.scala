@@ -87,6 +87,8 @@ object Main {
   /** Display configuration information. */
   private def do_info(state: State): CLIError \/ Unit = {
     println(f"${"Client ID:"}%-20s ${state.config.client_id}")
+    println(f"${"API Key ID:"}%-20s ${state.config.api_key_id}")
+    println(f"${"API Secret:"}%-20s ${state.config.api_secret}")
     ok
   }
 
