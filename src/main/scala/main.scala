@@ -204,7 +204,7 @@ object Main {
 
   private def do_revoke(state: State, cmd: RevokeSharing): CLIError \/ Unit = {
     val user_id = state.config.client_id // assume writer == user for now
-    state.client.revokeSharing(user_id, cmd.reader, user_id)
+    state.client.revokeSharing(user_id, user_id, cmd.reader)
 
     ok
   }
