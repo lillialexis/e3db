@@ -62,7 +62,7 @@ object OptionParser {
   /** Argument parser for a java.nio.file.Path. */
   private def parsePath = eitherReader { s =>
     try {
-      \/-(Paths.get(s))
+      \/-(Paths.get(s).toAbsolutePath)
     } catch {
       case _: InvalidPathException =>
         -\/(s"Invalid path: ${s}")

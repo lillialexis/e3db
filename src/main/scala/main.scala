@@ -352,6 +352,10 @@ object Main {
         err.exception.printStackTrace()
       }
 
+      case err: ClientError => {
+        err.exception.printStackTrace()
+      }
+
       case err => {
         println(err.message)
       }
