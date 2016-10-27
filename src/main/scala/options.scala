@@ -39,7 +39,7 @@ case object Register extends Command
 case object Info extends Command
 
 // TODO: These should arguably be subcommands like "pds cab get"...
-case class GetCab(writer_id: UUID, user_id: UUID) extends Command
+case class GetCab(writer_id: UUID, user_id: UUID, record_type: String) extends Command
 case class GetKey(client_id: UUID) extends Command
 
 sealed trait Sharing
@@ -99,7 +99,8 @@ object OptionParser {
   // Options for the `getcab` command:
   private val getCabOpts: Parser[Command] =
     (argument[UUID](parseUUID, metavar("WRITER_ID"), help("ID of writer")) |@|
-     argument[UUID](parseUUID, metavar("USER_ID"),   help("ID of user")))(GetCab)
+     argument[UUID](parseUUID, metavar("USER_ID"),   help("ID of user")) |@|
+      strArgument(metavar("RECORD_TYPE"), help("Type of records.")))(GetCab)
 
  // Options for the `getkey` command:
  private val getKeyOpts: Parser[Command] =
