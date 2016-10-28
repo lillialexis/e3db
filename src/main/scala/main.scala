@@ -60,7 +60,7 @@ object Main {
     }
   }
 
-  private val DEFAULT_SERVICE_URL = "https://api.dev.pds.tozny.com/v1"
+  private val DEFAULT_SERVICE_URL = "https://api.staging.pds.tozny.com/v1"
   private val KEY_PAIR_BITS = 4096
   private val ACCESS_KEY_BITS = 256
   private val CAB_VERSION = "1.0"
@@ -178,7 +178,7 @@ object Main {
 
   private def do_share(state: State, cmd: Sharing with Command): CLIError \/ Unit = {
     val req = cmd match {
-      case AddSharing(reader, content_type) => {
+      case AddSharing(content_type, reader) => {
         val user_id = state.config.client_id    // assume writer == user for now
         state.client.authorizeReader(user_id, reader, content_type)
         new PolicyRequest(state.config.client_id,
@@ -188,7 +188,7 @@ object Main {
           content_type
         )
       }
-      case RemoveSharing(reader, content_type) => {
+      case RemoveSharing(content_type, reader) => {
         new PolicyRequest(state.config.client_id,
           state.config.client_id,
           reader,

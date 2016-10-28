@@ -44,8 +44,8 @@ case class GetKey(client_id: UUID) extends Command
 
 sealed trait Sharing
 
-case class AddSharing(reader: UUID, ctype: String) extends Command with Sharing
-case class RemoveSharing(reader: UUID, ctype: String) extends Command with Sharing
+case class AddSharing(ctype: String, reader: UUID) extends Command with Sharing
+case class RemoveSharing(ctype: String, reader: UUID) extends Command with Sharing
 case class RevokeSharing(reader: UUID) extends Command
 
 object OptionParser {
@@ -108,12 +108,12 @@ object OptionParser {
    (argument[UUID](parseUUID, metavar("CLIENT_ID"), help("ID of client"))).map(GetKey.apply)
 
   private val shareOpts: Parser[Command] =
-    (argument(parseUUID, metavar("READER_ID"), help("ID of reader.")) |@|
-      argument(readStr, metavar("CONTENT_TYPE"), help("Type of content to share.")))(AddSharing)
+    (argument(readStr, metavar("CONTENT_TYPE"), help("Type of content to share.")) |@|
+      argument(parseUUID, metavar("READER_ID"), help("ID of reader.")))(AddSharing)
 
   private val denyOpts: Parser[Command] =
-    (argument(parseUUID, metavar("READER_ID"), help("ID of reader.")) |@|
-     argument(readStr, metavar("CONTENT_TYPE"), help("Type of content to stop sharing.")))(RemoveSharing)
+    (argument(readStr, metavar("CONTENT_TYPE"), help("Type of content to stop sharing."))  |@|
+      argument(parseUUID, metavar("READER_ID"), help("ID of reader.")))(RemoveSharing)
 
   private val revokeOpts: Parser[Command] =
     (argument(parseUUID, metavar("READER_ID"), help("ID of reader."))).map(RevokeSharing.apply)
