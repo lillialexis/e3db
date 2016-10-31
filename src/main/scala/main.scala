@@ -62,7 +62,6 @@ object Main {
 
   private val DEFAULT_SERVICE_URL = "https://api.staging.pds.tozny.com/v1"
   private val KEY_PAIR_BITS = 4096
-  private val ACCESS_KEY_BITS = 256
   private val CAB_VERSION = "1.0"
 
   /** Perform interactive registration and exit. */
