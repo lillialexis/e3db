@@ -19,25 +19,10 @@ The Tozny PDS software contains the following components:
 
 To install the PDS CLI, download the software from:
 
-    https://github.com/tozny/pds/archive/release/pds-cli-0.3.zip
+    https://github.com/tozny/pds/releases/download/0.4.1/pds-cli-0.4.1.zip
 
-Unzip the `pds-cli-0.3.zip` file in a convenient location and add
-the `pds-cli-0.3/bin` directory to your `PATH`.
-
-## Install JCE Unlimited Strength Policy
-
-Most installations of the Java runtime do not ship with the
-necessary policy configuration to allow the key sizes used by
-the Tozny PDS.
-
-To download and install the unlimited strength JCE policy files,
-visit the following URL:
-
-    http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html
-
-This ZIP file contains the policy files and a `README.txt`
-with instructions on how where to place the files in the Java
-runtime data folder.
+Unzip the `pds-cli-0.4.1.zip` file in a convenient location and add
+the `pds-cli-0.4.1.zip/bin` directory to your `PATH`.
 
 ## Registration
 
@@ -54,7 +39,7 @@ server URL---accept the default by pressing return):
 
 ```
 E-Mail Address []: foo@example.com<RETURN>
-Service URL [https://api.dev.pds.tozny.com/v1]: <RETURN>
+Service URL [https://api.staging.pds.tozny.com/v1]: <RETURN>
 ```
 
 Tozny will send a confirmation e-mail to the address entered
