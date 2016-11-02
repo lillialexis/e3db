@@ -80,6 +80,8 @@ object Main {
 
     Config.save(opts.config_file, config)
 
+    println(f"${"Registered Client ID:"}-%20s ${resp.client_id}")
+    println("Please check your email to verify your account and complete registration.")
     ok
   }
 
