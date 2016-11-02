@@ -13,10 +13,10 @@ object CliBuild extends Build {
 
   /**
     * Set up an external dependency on the SDK project if the
-    * PDS-CLIENT-SDK environment variable or system property is defined.
+    * E3DB-CLIENT-SDK environment variable or system property is defined.
     */
-  val sdkProject: Seq[ClasspathDependency] = Option(System.getenv("PDS-CLIENT-SDK"))
-    .orElse(Option(System.getProperty("PDS-CLIENT-SDK")))
+  val sdkProject: Seq[ClasspathDependency] = Option(System.getenv("E3DB-CLIENT-SDK"))
+    .orElse(Option(System.getProperty("E3DB-CLIENT-SDK")))
     .map(Paths.get(_).toFile)
     .filter(_.isDirectory)
     .map(proj => {
@@ -24,7 +24,7 @@ object CliBuild extends Build {
       RootProject(base = proj)
     }).toSeq
 
-  lazy val root: Project = Project(id = "pds-cli",
+  lazy val root: Project = Project(id = "e3db",
     base = file(".")
   ).dependsOn(sdkProject :_*)
 }

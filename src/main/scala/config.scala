@@ -5,7 +5,7 @@
 // All Rights Reserved.
 //
 
-package com.tozny.pds.cli
+package com.tozny.e3db.cli
 
 import scala.io.StdIn
 import scala.collection.JavaConversions._
@@ -21,7 +21,7 @@ import argonaut._
 import Argonaut._
 import org.jose4j.jwk._
 
-/** Configuration file for the PDS CLI. */
+/** Configuration file for the E3DB CLI. */
 case class Config (
   client_id: UUID,
   api_url: String,

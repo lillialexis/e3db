@@ -5,8 +5,8 @@
 // All Rights Reserved.
 //
 
-name := "pds-client-examples"
-organization := "com.tozny.pds"
+name := "e3db-client-examples"
+organization := "com.tozny.e3db"
 
 autoScalaLibrary := false
 crossPaths := false
@@ -15,5 +15,5 @@ javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 javacOptions in (Compile, doc) := Seq("-source", "1.7")
 
 libraryDependencies ++= Seq(
-  "com.tozny.pds" % "pds-client" % "0.2.1-SNAPSHOT"
+  "com.tozny.e3db" % "e3db-client" % "0.5.0"
 )

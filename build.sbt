@@ -5,8 +5,8 @@
 // All Rights Reserved.
 //
 
-organization := "com.tozny.pds"
-version := "0.3.1-SNAPSHOT"
+organization := "com.tozny.e3db"
+version := "0.5.0"
 
 scalaVersion := "2.11.8"
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint")
@@ -17,10 +17,11 @@ enablePlugins(DockerPlugin)
 enablePlugins(AshScriptPlugin)
 
 dockerBaseImage := "tozny/java"
-executableScriptName := "pds"
+executableScriptName := "e3db"
 
 resolvers += Resolver.sonatypeRepo("releases")
 resolvers += Resolver.jcenterRepo
+resolvers += "tozny" at "https://maven.tozny.com/repo"
 
 libraryDependencies ++= Seq(
   // Core Libraries
@@ -40,7 +41,7 @@ libraryDependencies ++= Seq(
   "org.bitbucket.b_c" % "jose4j" % "0.5.2",
 
   // Tozny Libraries
-  "com.tozny.pds" % "pds-client" % "0.3.1-SNAPSHOT"
+  "com.tozny.e3db" % "e3db-client" % "0.5.0"
 )
 
 val examples = project.in(file("examples"))
