@@ -161,7 +161,7 @@ object Main {
   /** Read a file by ID */
   private def do_readfile(state: State, cmd: ReadFile): CLIError \/ Unit = {
     state.client.readRecord(cmd.record_id).asScala.map({ rec =>
-      val filename = cmd.dest.getOrElse(rec.data("filename"))
+      val filename = cmd.dest.getOrElse(Paths.get(rec.data("filename")).getFileName.toString)
       val stream = new FileOutputStream(filename)
       try {
         stream.write(Base64.decode(rec.data("contents")))
@@ -239,7 +239,9 @@ object Main {
 
   /** Write a file */
   private def do_writefile(state: State, cmd: WriteFile): CLIError \/ Unit = {
-    val data = Files.readAllBytes(Paths.get(cmd.filename))
+    val path = Paths.get(cmd.filename)
+    val filename = path.getFileName.toString
+    val data = Files.readAllBytes(path)
     val meta = new Meta(state.config.client_id,
       cmd.user_id.getOrElse(state.config.client_id),
       cmd.ctype)
@@ -247,8 +249,8 @@ object Main {
     val fileTypeMap = new MimetypesFileTypeMap()
 
     val dataMap = Map(
-      "filename" -> cmd.filename,
-      "content-type" -> fileTypeMap.getContentType(cmd.filename),
+      "filename" -> filename,
+      "content-type" -> fileTypeMap.getContentType(filename),
       "contents" -> Base64.encode(data)
     )
 
