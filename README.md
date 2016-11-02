@@ -83,6 +83,22 @@ These examples demonstrate how to use the E3DB Command Line
 Interface to interactively use E3DB as a database without
 the need to write any code.
 
+Note that all E3DB commands have help, so anytime you can see
+the documentation for a given command using the `--help` argument. For
+example, you can see help on all commands:
+
+```
+$ e3db --help
+...
+```
+
+Or help on a particular command, such as `register`:
+
+```
+$ e3db register --help
+...
+```
+
 ### Writing Records
 
 To write a record containing free-form JSON data, use the
@@ -195,6 +211,33 @@ client with the unique ID `eb540605-9f2f-4251-bd40-90ba8da99615`
 to read your records with type `address_book`. It will also
 securely share the encryption key for those records with the
 client so they can decrypt the contents of each field.
+
+### Storing Files
+
+The E3DB CLI has special support for writing files to E3DB. To
+write a file, use the `writefile` command:
+
+```
+$ e3db writefile DOC message.txt
+eee7bb6f-90f3-407f-a6f7-08923c0c64d5
+```
+
+The first argument is the "content type" of the file (with the same meaning
+as the content type argument given to the `write` and `share` commands), while
+the second is a path to the file.
+
+The UUID printed on the console is the record ID for the file in E3DB.
+
+### Retrieving Files
+
+A previously stored file can be retrieved using `readfile`. Assuming
+the UUID above:
+
+```
+$ e3db readfile eee7bb6f-90f3-407f-a6f7-08923c0c64d5
+```
+
+which would write a file named `message.txt` in the current directory.
 
 ## Code Examples
 
