@@ -88,6 +88,8 @@ object Main {
   /** Display configuration information. */
   private def do_info(state: State): CLIError \/ Unit = {
     println(f"${"Client ID:"}%-20s ${state.config.client_id}")
+    println(f"${"API Key ID:"}%-20s ${state.config.api_key_id}")
+    println(f"${"API Secret:"}%-20s ${state.config.api_secret}")
     ok
   }
 
@@ -95,7 +97,7 @@ object Main {
   private def do_ls(state: State, cmd: Ls): CLIError \/ Unit = {
     val records = state.client.listRecords(cmd.limit, cmd.offset).toList
 
-    println(f"${"Record ID"}%-40s  ${"Producer"}%-12s  ${"Type"}")
+    println(f"${"Record ID"}%-40s  ${"Writer"}%-12s  ${"Type"}")
     println("-" * 78)
     records.foreach { rec =>
       println(f"${rec.record_id}%-40s  ${rec.writer_id.toString.slice(0, 8) + "..."}%-12s  ${rec.`type`}")

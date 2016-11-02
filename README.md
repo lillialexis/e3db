@@ -8,6 +8,11 @@ writing, and listing JSON data stored securely in the cloud.
 
 ## Installation
 
+(Note: These install instructions contain examples for Mac OS
+and Linux users. The process is similar on Windows---build steps
+for Windows users will be provided in another document in a future
+release.)
+
 The Tozny E3DB software contains the following components:
 
 - A Command Line Interface (CLI) tool used for registering
@@ -16,12 +21,35 @@ The Tozny E3DB software contains the following components:
 - A Java SDK for connecting to E3DB and performing
   database operations from Java applications or web services.
 
-To install the E3DB CLI, download the software from:
+To obtain the source for the E3DB CLI and example code, check
+out the Git repository by running:
 
-    https://github.com/tozny/e3db/releases/download/0.5.0/e3db-cli-0.5.0.zip
+    $ git clone https://github.com/tozny/e3db
+    $ cd e3db
 
-Unzip the `e3db-cli-0.5.0.zip` file in a convenient location and add
-the `e3db-cli-0.5.0/bin` directory to your `PATH`.
+Next, compile and package the E3DB CLI using SBT. This will automatically
+fetch the E3DB Client Library from our Maven repository:
+
+    $ ./sbt universal:packageBin
+
+(Note that it will take some time to install the Scala compiler and SBT
+runtime the first time the `sbt` script is run.)
+
+When this completes, the binary distribution will be located in:
+
+    target/universal/e3db-0.5.0.zip
+
+Unzip this file to any location and add this directory to your
+path. For example:
+
+    $ unzip target/universal/e3db-0.5.0.zip -d $HOME
+    $ export PATH=$PATH:$HOME/e3db-0.5.0/bin
+
+You should now be able to run the E3DB CLI via the `e3db` command:
+
+    $ e3db --help
+    Usage: e3db [-v|--verbose] [-c|--config FILENAME] COMMAND
+    [...]
 
 ## Registration
 
@@ -46,13 +74,30 @@ during the registration process. Simply click the link in the
 e-mail to complete the registration.
 
 After a successful registration, API credentials and other
-configuration will be written to the file `$HOME/.tozny/e3db.json`.
+configuration will be written to the file `$HOME/.tozny/e3db.json`
+and can be displayed by running `e3db info`.
 
 ## CLI Examples
 
 These examples demonstrate how to use the E3DB Command Line
 Interface to interactively use E3DB as a database without
 the need to write any code.
+
+Note that all E3DB commands have help, so anytime you can see
+the documentation for a given command using the `--help` argument. For
+example, you can see help on all commands:
+
+```
+$ e3db --help
+...
+```
+
+Or help on a particular command, such as `register`:
+
+```
+$ e3db register --help
+...
+```
 
 ### Writing Records
 
@@ -85,8 +130,8 @@ To list all records that we have access to in E3DB, use the
 `e3db ls` command:
 
 ```
-$ ./e3db ls
-Record ID                                 Producer      Type
+$ e3db ls
+Record ID                                 Writer        Type
 ------------------------------------------------------------------------------
 874b41ff-ac84-4961-a91d-9e0c114d0e92      e04af806...   address_book
 ```
@@ -95,7 +140,7 @@ For each record accessible in E3DB, the `ls` command lists the record ID,
 ID of the client that wrote the record, and the type of data contained
 in the record.
 
-When other parties share data with us, the `Producer` column will show the
+When other parties share data with us, the `Writer` column will show the
 ID of the client that shared the data, rather than our own client ID.
 
 ### Reading Records
@@ -123,7 +168,7 @@ such as its unique ID, type, and the IDs of the client that wrote
 the record and its associated user. Then it displays each field
 from the original JSON data, along with its decrypted value.
 
-The Tozny E3DB stores each field encrypted using 256-bit AES
+The Tozny E3DB stores each field encrypted using 128-bit AES
 encryption with a unique key for each client, user, and
 data type. Normally, the E3DB client performs this encryption
 and decryption transparently. To skip this decryption step and
@@ -158,7 +203,7 @@ records based on their content type. For example, to share
 all address book entries with another client:
 
 ```
-$ e3eb share eb540605-9f2f-4251-bd40-90ba8da99615 address_book
+$ e3db share address_book eb540605-9f2f-4251-bd40-90ba8da99615
 ```
 
 This command will set up access control policy to allow the
@@ -167,17 +212,96 @@ to read your records with type `address_book`. It will also
 securely share the encryption key for those records with the
 client so they can decrypt the contents of each field.
 
+### Storing Files
+
+The E3DB CLI has special support for writing files to E3DB. To
+write a file, use the `writefile` command:
+
+```
+$ e3db writefile DOC message.txt
+eee7bb6f-90f3-407f-a6f7-08923c0c64d5
+```
+
+The first argument is the "content type" of the file (with the same meaning
+as the content type argument given to the `write` and `share` commands), while
+the second is a path to the file.
+
+The UUID printed on the console is the record ID for the file in E3DB.
+
+### Retrieving Files
+
+A previously stored file can be retrieved using `readfile`. Assuming
+the UUID above:
+
+```
+$ e3db readfile eee7bb6f-90f3-407f-a6f7-08923c0c64d5
+```
+
+which would write a file named `message.txt` in the current directory.
+
 ## Code Examples
 
-### Importing the E3DB Client Library
+The `e3db` repository also contains example code showing simple
+Java code using the E3DB client library. The Java example code
+lives at:
 
-### Creating a E3DB Client
+    examples/src/main/java
+
+### Building the Example Code
+
+To build the E3DB code examples with SBT, run:
+
+    $ ./sbt examples/compile
+
+### Creating an E3DB Client
+
+Each example class begins by creating a `Client` object via the
+class `HttpE3DBClientBuilder`. Using a builder-style interface
+makes it easy to pass in the necessary configuration settings and
+credentials needed to set up the client.
+
+```java
+Client client = new HttpE3DBClientBuilder()
+  .setClientId(clientId)
+  .setApiKeyId(apiKeyId)
+  .setApiSecret(apiSecret)
+  .setKeyManager(keyManager)
+  .setServiceUri("https://api.e3db.tozny.com/v1")
+  .build();
+```
+
+In the example code, parameters like `clientId` come from command-line
+arguments. In a production system, they would come from a configuration
+file, credential storage system, or some other location.
 
 ### Writing Records
 
 ### Listing Records
 
+Once the client API is configured, it is simple to list records visible
+to the client by calling `listRecords`:
+
+```java
+for (Meta meta : client.listRecords(100, 0)) {
+  System.out.printf("%-40s %s\n", meta.record_id, meta.type);
+}
+```
+
+For each record returned by `listRecords`, we receive an instance
+of `Meta`, which contains the following meta-information about each
+record in the data store:
+
+```java
+public class Meta {
+  public final UUID record_id;
+  public final UUID writer_id;
+  public final UUID user_id;
+  public final String type;
+  public final Date created;
+  public final Date last_modified;
+}
+```
+
 ### Reading Records
 
 ### Sharing Records
-

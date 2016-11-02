@@ -43,3 +43,6 @@ libraryDependencies ++= Seq(
   // Tozny Libraries
   "com.tozny.e3db" % "e3db-client" % "0.5.0"
 )
+
+val examples = project.in(file("examples"))
+

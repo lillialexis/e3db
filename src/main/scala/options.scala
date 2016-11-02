@@ -141,13 +141,13 @@ object OptionParser {
        command("register",  info(pure(Register),           progDesc("Register an account with E3DB"))),
        command("getcab",    info(getCabOpts <*> helper,    progDesc("Retrieve a CAB from E3DB"))),
        command("getkey",    info(getKeyOpts <*> helper,    progDesc("Retrieve a client's public key"))),
-       command("share",     info(shareOpts <*> helper,     progDesc("Start sharing records with the given user.")))/*,
+       command("share",     info(shareOpts <*> helper,     progDesc("Start sharing records with the given reader.")))/*,
        not yet working
        command("deny",     info(denyOpts <*> helper,  progDesc("Stop sharing records with the given user.")))*/,
        command("revoke",    info(revokeOpts <*> helper,      progDesc("Revoke all sharing with the given reader.")))
     ))(Options)
 
-  private val opts = info(parseOpts <*> helper, progDesc("Tozny Personal Data Service CLI"))
+  private val opts = info(parseOpts <*> helper, progDesc("Tozny E3DB CLI"))
   private val optPrefs = prefs(showHelpOnError)
 
   /**

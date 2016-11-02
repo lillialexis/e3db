@@ -24,7 +24,7 @@ object CliBuild extends Build {
       RootProject(base = proj)
     }).toSeq
 
-  lazy val root: Project = Project(id = "e3db-cli",
+  lazy val root: Project = Project(id = "e3db",
     base = file(".")
   ).dependsOn(sdkProject :_*)
 }
