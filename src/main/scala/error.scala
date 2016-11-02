@@ -10,7 +10,7 @@ package com.tozny.e3db.cli
 import scalaz._
 import scalaz.syntax.either._
 
-import com.tozny.pds.client.PDSClientError
+import com.tozny.e3db.client.E3DBClientError
 
 sealed trait CLIError {
   val message: String
@@ -29,7 +29,7 @@ case class MiscError(message: String, exception: Throwable) extends CLIError
 object CLIError {
   def handle[A](f: => A): \/[CLIError, A] =
     \/.fromTryCatchNonFatal(f).leftMap {
-      case e: PDSClientError => ClientError(e.getMessage, e)
+      case e: E3DBClientError => ClientError(e.getMessage, e)
       case e => MiscError(e.getMessage, e)
     }
 }

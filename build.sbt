@@ -40,5 +40,5 @@ libraryDependencies ++= Seq(
   "org.bitbucket.b_c" % "jose4j" % "0.5.2",
 
   // Tozny Libraries
-  "com.tozny.pds" % "pds-client" % "0.4.1"
+  "com.tozny.e3db" % "e3db-client" % "0.4.1"
 )

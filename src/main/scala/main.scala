@@ -22,7 +22,7 @@ import argonaut.JsonParser
 import org.jose4j.jwk._
 import org.jose4j.jwe.KeyManagementAlgorithmIdentifiers
 
-import com.tozny.pds.client._
+import com.tozny.e3db.client._
 import org.jose4j.base64url.Base64
 import org.jose4j.jwe._
 
@@ -322,7 +322,7 @@ object Main {
           .setClientId(config.client_id)
           .setConfigDir(new ConfigDir(opts.config_file.getParent.toFile))
           .build()
-        client = new HttpPDSClientBuilder()
+        client = new HttpE3DBClientBuilder()
           .setClientId(config.client_id)
           .setServiceUri(config.api_url)
           .setApiKeyId(config.api_key_id)
@@ -339,7 +339,7 @@ object Main {
     (try {
       runWithOpts(OptionParser.parse(args))
     } catch {
-      case e: PDSClientError => ClientError(e.getMessage, e).left
+      case e: E3DBClientError => ClientError(e.getMessage, e).left
       case e: Exception      => MiscError(e.getMessage, e).left
     }).leftMap {
       case err: ConfigError => {
