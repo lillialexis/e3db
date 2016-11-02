@@ -1,11 +1,11 @@
 //
-// main.scala --- PDS CLI main program.
+// main.scala --- E3DB CLI main program.
 //
 // Copyright (C) 2016, Tozny, LLC.
 // All Rights Reserved.
 //
 
-package com.tozny.pds.cli
+package com.tozny.e3db.cli
 
 import java.io.FileOutputStream
 import java.nio.file.{Files, Paths}
@@ -60,7 +60,7 @@ object Main {
     }
   }
 
-  private val DEFAULT_SERVICE_URL = "https://api.staging.pds.tozny.com/v1"
+  private val DEFAULT_SERVICE_URL = "https://api.e3db.tozny.com/v1"
   private val KEY_PAIR_BITS = 4096
   private val CAB_VERSION = "1.0"
 
@@ -68,7 +68,7 @@ object Main {
   private def do_register(opts: Options): CLIError \/ Unit = {
     val email = readLineRequired("E-Mail Address", "")
     val url = readLineDefault("Service URL", DEFAULT_SERVICE_URL)
-    val mgr = ConfigFileKeyManager.create(opts.config_file.getParent.resolve("pds_key.json").toFile)
+    val mgr = ConfigFileKeyManager.create(opts.config_file.getParent.resolve("e3db_key.json").toFile)
     val resp = new Registration.Builder()
       .setServiceUri(url)
       .setEmail(email)
@@ -259,7 +259,7 @@ object Main {
     ok
   }
 
-  /** Read a CAB from the PDS and print it. */
+  /** Read a CAB from E3DB and print it. */
   private def do_getcab(state: State, cmd: GetCab): CLIError \/ Unit = {
     state.client.getCab(cmd.writer_id, cmd.user_id, cmd.record_type).asScala.map({ cab =>
 
@@ -282,7 +282,7 @@ object Main {
     ok
   }
 
-  /** Read a client's public key from the PDS and print it. */
+  /** Read a client's public key from E3DB and print it. */
   private def do_getkey(state: State, cmd: GetKey): CLIError \/ Unit = {
     state.client.getClientKey(cmd.client_id).asScala.map(_.toJson).map({ keyJson =>
       \/.fromEither(JsonParser.parse(keyJson)).map { obj =>
@@ -316,7 +316,7 @@ object Main {
     } else {
       for {
         config <- Config.load(opts.config_file)
-        keyManager = ConfigFileKeyManager.get(opts.config_file.getParent.resolve("pds_key.json").toFile)
+        keyManager = ConfigFileKeyManager.get(opts.config_file.getParent.resolve("e3db_key.json").toFile)
         cabManager = new ConfigCabManagerBuilder()
           .setKeyManager(keyManager)
           .setClientId(config.client_id)
@@ -344,7 +344,7 @@ object Main {
     }).leftMap {
       case err: ConfigError => {
         println(err.message)
-        println("Run `pds register' to create an account.")
+        println("Run `e3db register' to create an account.")
       }
 
       case err: MiscError => {

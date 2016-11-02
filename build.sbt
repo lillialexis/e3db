@@ -5,8 +5,8 @@
 // All Rights Reserved.
 //
 
-organization := "com.tozny.pds"
-version := "0.4.1"
+organization := "com.tozny.e3db"
+version := "0.5.0"
 
 scalaVersion := "2.11.8"
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint")
@@ -17,7 +17,7 @@ enablePlugins(DockerPlugin)
 enablePlugins(AshScriptPlugin)
 
 dockerBaseImage := "tozny/java"
-executableScriptName := "pds"
+executableScriptName := "e3db"
 
 resolvers += Resolver.sonatypeRepo("releases")
 resolvers += Resolver.jcenterRepo

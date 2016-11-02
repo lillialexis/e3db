@@ -5,7 +5,7 @@
 // All Rights Reserved.
 //
 
-package com.tozny.pds.cli
+package com.tozny.e3db.cli
 
 import scalaz._
 import scalaz.syntax.either._
