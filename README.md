@@ -1,4 +1,4 @@
-# Tozny Personal Data Service
+# Tozny End-to-End Encrypted Database
 
 The Tozny End-to-End Encrypted Database (E3DB) is a storage
 platform with powerful sharing and consent management features.

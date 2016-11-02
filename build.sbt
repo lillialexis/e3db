@@ -21,6 +21,7 @@ executableScriptName := "e3db"
 
 resolvers += Resolver.sonatypeRepo("releases")
 resolvers += Resolver.jcenterRepo
+resolvers += "tozny" at "https://maven.tozny.com/repo"
 
 libraryDependencies ++= Seq(
   // Core Libraries
@@ -40,5 +41,5 @@ libraryDependencies ++= Seq(
   "org.bitbucket.b_c" % "jose4j" % "0.5.2",
 
   // Tozny Libraries
-  "com.tozny.e3db" % "e3db-client" % "0.4.1"
+  "com.tozny.e3db" % "e3db-client" % "0.5.0"
 )
