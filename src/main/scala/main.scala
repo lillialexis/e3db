@@ -163,6 +163,8 @@ object Main {
     state.client.readRecord(cmd.record_id).asScala.map({ rec =>
       val filename = cmd.dest.getOrElse(Paths.get(rec.data("filename")).getFileName.toString)
       val stream = new FileOutputStream(filename)
+
+      println(f"${"Writing File:"}%-20s ${filename}")
       try {
         stream.write(Base64.decode(rec.data("contents")))
       } finally {
