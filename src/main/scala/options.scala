@@ -5,7 +5,7 @@
 // All Rights Reserved.
 //
 
-package com.tozny.pds.cli
+package com.tozny.e3db.cli
 
 import java.nio.file.{InvalidPathException,Path,Paths}
 import java.util.UUID
@@ -17,7 +17,7 @@ import scalaz.syntax.apply._
 import net.bmjames.opts._
 
 /**
- * Command-line options to the PDS utility.
+ * Command-line options to the E3DB utility.
  *
  * This class contains global options that are applicable to all
  * commands. Each command contains options that are local to itself.
@@ -38,7 +38,7 @@ case class Ls(limit: Int, offset: Int) extends Command
 case object Register extends Command
 case object Info extends Command
 
-// TODO: These should arguably be subcommands like "pds cab get"...
+// TODO: These should arguably be subcommands like "e3db cab get"...
 case class GetCab(writer_id: UUID, user_id: UUID, record_type: String) extends Command
 case class GetKey(client_id: UUID) extends Command
 
@@ -88,7 +88,7 @@ object OptionParser {
   private val writeFileOpts: Parser[Command] =
     (optional(option[UUID](parseUUID, long("user"), help("Owning user of record"))) |@|
       strArgument(metavar("TYPE"), help("Record type")) |@|
-      strArgument(metavar("FILENAME"), help("Path to file to write to PDS")))(WriteFile)
+      strArgument(metavar("FILENAME"), help("Path to file to write to E3DB")))(WriteFile)
 
   // Options for the `ls` command:
   private val lsOpts: Parser[Command] =
@@ -118,9 +118,9 @@ object OptionParser {
   private val revokeOpts: Parser[Command] =
     (argument(parseUUID, metavar("READER_ID"), help("ID of reader."))).map(RevokeSharing.apply)
 
-  // Default location of the PDS CLI config file.
+  // Default location of the E3DB CLI config file.
   private val defaultConfigFile =
-    Paths.get(System.getProperty("user.home"), ".tozny", "pds.json")
+    Paths.get(System.getProperty("user.home"), ".tozny", "e3db.json")
 
   private val parseOpts: Parser[Options] =
     // Global options:
@@ -133,13 +133,13 @@ object OptionParser {
      // Subcommands:
      subparser[Command](
        command("info",      info(pure(Info),               progDesc("Display configuration info"))),
-       command("read",      info(readOpts <*> helper,      progDesc("Read data from the PDS"))),
-       command("readfile",  info(readFileOpts <*> helper,  progDesc("Read a file from the PDS"))),
-       command("write",     info(writeOpts <*> helper,     progDesc("Write data to the PDS"))),
-       command("writefile", info(writeFileOpts <*> helper, progDesc("Write a file to the PDS"))),
-       command("ls",        info(lsOpts <*> helper,        progDesc("List my records in the PDS"))),
-       command("register",  info(pure(Register),           progDesc("Register an account with the PDS"))),
-       command("getcab",    info(getCabOpts <*> helper,    progDesc("Retrieve a CAB from the PDS"))),
+       command("read",      info(readOpts <*> helper,      progDesc("Read data from E3DB"))),
+       command("readfile",  info(readFileOpts <*> helper,  progDesc("Read a file from E3DB"))),
+       command("write",     info(writeOpts <*> helper,     progDesc("Write data to E3DB"))),
+       command("writefile", info(writeFileOpts <*> helper, progDesc("Write a file to E3DB"))),
+       command("ls",        info(lsOpts <*> helper,        progDesc("List my records in E3DB"))),
+       command("register",  info(pure(Register),           progDesc("Register an account with E3DB"))),
+       command("getcab",    info(getCabOpts <*> helper,    progDesc("Retrieve a CAB from E3DB"))),
        command("getkey",    info(getKeyOpts <*> helper,    progDesc("Retrieve a client's public key"))),
        command("share",     info(shareOpts <*> helper,     progDesc("Start sharing records with the given user.")))/*,
        not yet working
@@ -157,5 +157,5 @@ object OptionParser {
    * if an error occurs.
    */
   def parse(args: Array[String]): Options =
-    customExecParser(args.toList, "pds", optPrefs, opts)
+    customExecParser(args.toList, "e3db", optPrefs, opts)
 }
