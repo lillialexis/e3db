@@ -19,6 +19,11 @@ Please try out E3DB and give us feedback! Here are the basic steps:
  1. Now try the same thing on a different account and share the data as below.
  1. Review and run the feedback.sh script to tell us your thoughts. You'll have to set your path at the top.
 
+## Terms of Service
+
+Your use of E3DB must abide by our [Terms of Service](terms.pdf), as detailed in
+the linked document.
+
 ## Installation
 
 (Note: These install instructions contain examples for Mac OS

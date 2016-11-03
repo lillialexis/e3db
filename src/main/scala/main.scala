@@ -66,9 +66,15 @@ object Main {
 
   /** Perform interactive registration and exit. */
   private def do_register(opts: Options): CLIError \/ Unit = {
+    val keyFile = opts.config_file.getParent.resolve("e3db_key.json").toFile
+    if(opts.config_file.toFile.exists() || keyFile.exists()) {
+      println(s"WARNING: Registration (${opts.config_file.toFile}) or private key (${keyFile}) already exists. Move or delete those files if you wish to re-register.")
+      return ok
+    }
+
     val email = readLineRequired("E-Mail Address", "")
     val url = readLineDefault("Service URL", DEFAULT_SERVICE_URL)
-    val mgr = ConfigFileKeyManager.create(opts.config_file.getParent.resolve("e3db_key.json").toFile)
+    val mgr = ConfigFileKeyManager.create(keyFile)
     val resp = new Registration.Builder()
       .setServiceUri(url)
       .setEmail(email)
@@ -80,7 +86,7 @@ object Main {
 
     Config.save(opts.config_file, config)
 
-    println(f"${"Registered Client ID:"}%20s ${resp.client_id}")
+    println(f"${"Registered Client ID:"}%-20s ${resp.client_id}")
     println("Please check your email to verify your account and complete registration.")
     ok
   }
@@ -96,11 +102,16 @@ object Main {
   /** List records accessible to this client. */
   private def do_ls(state: State, cmd: Ls): CLIError \/ Unit = {
     val records = state.client.listRecords(cmd.limit, cmd.offset).toList
+    def line(a: Any, b: Any, c: Any): String = f"${a}%-40s  ${b}%-40s${c}"
+    val header = line("Record ID", "Writer", "Type")
+    println(header)
+    println("-" * header.length)
 
-    println(f"${"Record ID"}%-40s  ${"Writer"}%-12s  ${"Type"}")
-    println("-" * 78)
     records.foreach { rec =>
-      println(f"${rec.record_id}%-40s  ${rec.writer_id.toString.slice(0, 8) + "..."}%-12s  ${rec.`type`}")
+      if(rec.writer_id == state.config.client_id)
+        println(line(rec.record_id, "me", rec.`type`))
+      else
+        println(line(rec.record_id, rec.writer_id, rec.`type`))
     }
 
     ok
