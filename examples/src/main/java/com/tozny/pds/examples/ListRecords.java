@@ -7,14 +7,11 @@
 
 package com.tozny.e3db.examples;
 
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
-import com.tozny.e3db.client.Client;
-import com.tozny.e3db.client.HttpE3DBClientBuilder;
-import com.tozny.e3db.client.KeyManager;
-import com.tozny.e3db.client.Meta;
-import com.tozny.e3db.client.ConfigFileKeyManager;
+import com.tozny.e3db.client.*;
 
 /**
  * Example code using the Tozny E3DB API to create a client and
@@ -37,11 +34,18 @@ public class ListRecords {
       String apiKeyId = args[1];
       String apiSecret = args[2];
       KeyManager keyManager = ConfigFileKeyManager.get();
+      ConfigDir configDir = new ConfigDir(Paths.get(".").toFile());
+      CabManager cabManager = new ConfigCabManagerBuilder()
+          .setKeyManager(keyManager)
+          .setClientId(clientId)
+          .setConfigDir(configDir)
+          .build();
       Client client = new HttpE3DBClientBuilder()
         .setClientId(clientId)
         .setApiKeyId(apiKeyId)
         .setApiSecret(apiSecret)
         .setKeyManager(keyManager)
+        .setCabManager(cabManager)
         .setServiceUri("https://api.e3db.tozny.com/v1")
         .build();
 
