@@ -10,7 +10,8 @@ writing, and listing JSON data stored securely in the cloud.
 
 Please try out E3DB and give us feedback! Here are the basic steps:
 
- 1. Download and unzip E3DB
+ 1. [Download](https://github.com/tozny/e3db/releases/download/0.5.1/e3db-0.5.1.zip) and unzip E3DB.
+ 1. The e3db binary is now in ./e3db-0.5.1/bin/e3db
  1. e3db register # then check your email!
  1. e3db ls # You should see nothing
  1. Write a record: recordID=$(e3db write address_book '{"name": "John Doe", "phone": "503-555-1212"}')
