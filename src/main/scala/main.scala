@@ -80,7 +80,7 @@ object Main {
 
     Config.save(opts.config_file, config)
 
-    println(f"${"Registered Client ID:"}%20s ${resp.client_id}")
+    println(f"${"Registered Client ID:"}%-20s ${resp.client_id}")
     println("Please check your email to verify your account and complete registration.")
     ok
   }
@@ -96,11 +96,16 @@ object Main {
   /** List records accessible to this client. */
   private def do_ls(state: State, cmd: Ls): CLIError \/ Unit = {
     val records = state.client.listRecords(cmd.limit, cmd.offset).toList
+    def line(a: Any, b: Any, c: Any): String = f"${a}%-40s  ${b}%-40s${c}"
+    val header = line("Record ID", "Writer", "Type")
+    println(header)
+    println("-" * header.length)
 
-    println(f"${"Record ID"}%-40s  ${"Writer"}%-12s  ${"Type"}")
-    println("-" * 78)
     records.foreach { rec =>
-      println(f"${rec.record_id}%-40s  ${rec.writer_id.toString.slice(0, 8) + "..."}%-12s  ${rec.`type`}")
+      if(rec.writer_id == state.config.client_id)
+        println(line(rec.record_id, "me", rec.`type`))
+      else
+        println(line(rec.record_id, rec.writer_id, rec.`type`))
     }
 
     ok
