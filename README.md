@@ -39,7 +39,7 @@ To obtain the latest version of the E3DB CLI binary, download this file: [e3db-0
 https://github.com/tozny/e3db/releases.)
 
 When you unzip this file, the E3DB CLI executable will be located at
-e3db-0.5.1/bin/e3db. For ease of use, add this directory to your
+`e3db-0.5.1/bin/e3db`. For ease of use, add this directory to your
 path. For example:
 
     $ unzip e3db-0.5.1.zip -d $HOME
