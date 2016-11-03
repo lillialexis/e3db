@@ -8,9 +8,9 @@ writing, and listing JSON data stored securely in the cloud.
 
 ## Quick Start
 
-Please try out E3DB and give us feedback! Here are the basic steps:
+Please try out E3DB and give us feedback! Read below for detailed instructions. Here are the basic steps. You'll need the JVM:
 
- 1. Download [e3db-0.5.2.zip](https://github.com/tozny/e3db/releases/download/0.5.2/e3db-0.5.2.zip) and unzip it.
+ 1. Download [e3db-0.5.2.zip](https://github.com/tozny/e3db/releases/download/0.5.2/e3db-0.5.2.zip) and unzip it. Or clone this repo if you want extra fun.
  1. The `e3db` binary is now in `./e3db-0.5.2/bin`. Add that to your path.
  1. `e3db register` - then check your email!
  1. `e3db ls` - You should see nothing
@@ -29,7 +29,8 @@ the linked document.
 The Tozny E3DB software contains the following components:
 
 - A Command Line Interface (CLI) tool used for registering
-  accounts and performing interactive database operations.
+  accounts and performing interactive database operations. To use this
+  you will need the JVM.
 
 - A Java SDK for connecting to E3DB and performing
   database operations from Java applications or web services.
