@@ -6,6 +6,18 @@ platform with powerful sharing and consent management features.
 Tozny's E3DB provides a familiar JSON-based NoSQL-style API for reading,
 writing, and listing JSON data stored securely in the cloud.
 
+## Quick Start
+
+Please try out E3DB and give us feedback! Here are the basic steps:
+1. Download and unzip E3DB
+1. e3db register # then check your email!
+1. e3db ls # You should see nothing
+1. recordID=$(e3db write address_book '{"name": "John Doe", "phone": "503-555-1212"}')
+1. e3db ls # You should see your new record
+1. e3db read $recordID
+1. Now try the same thing on a different account and share the data
+1. Review and run the feedback.sh script to tell us your thoughts. You'll have to set your path at the top.
+
 ## Installation
 
 (Note: These install instructions contain examples for Mac OS
