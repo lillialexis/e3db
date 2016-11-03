@@ -6,6 +6,11 @@ platform with powerful sharing and consent management features.
 Tozny's E3DB provides a familiar JSON-based NoSQL-style API for reading,
 writing, and listing JSON data stored securely in the cloud.
 
+## Terms of Service
+
+Your use of E3DB must abide by our [Terms of Service](terms.pdf), as detailed in
+the linked document.
+
 ## Installation
 
 (Note: These install instructions contain examples for Mac OS
