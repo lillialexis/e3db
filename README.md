@@ -27,11 +27,6 @@ the linked document.
 
 ## Installation
 
-(Note: These install instructions contain examples for Mac OS
-and Linux users. The process is similar on Windows---build steps
-for Windows users will be provided in another document in a future
-release.)
-
 The Tozny E3DB software contains the following components:
 
 - A Command Line Interface (CLI) tool used for registering
@@ -40,29 +35,19 @@ The Tozny E3DB software contains the following components:
 - A Java SDK for connecting to E3DB and performing
   database operations from Java applications or web services.
 
-To obtain the source for the E3DB CLI and example code, check
-out the Git repository by running:
+To obtain the latest version of the E3DB CLI binary, use the following link:
 
-    $ git clone https://github.com/tozny/e3db
-    $ cd e3db
+    https://github.com/tozny/e3db/releases/download/0.5.1/e3db-0.5.1.zip
 
-Next, compile and package the E3DB CLI using SBT. This will automatically
-fetch the E3DB Client Library from our Maven repository:
+(You can always find the latest binaries on our releases page at
+https://github.com/tozny/e3db/releases.)
 
-    $ ./sbt universal:packageBin
-
-(Note that it will take some time to install the Scala compiler and SBT
-runtime the first time the `sbt` script is run.)
-
-When this completes, the binary distribution will be located in:
-
-    target/universal/e3db-0.5.0.zip
-
-Unzip this file to any location and add this directory to your
+When you unzip this file, the E3DB CLI executable will be located at
+e3db-0.5.1/bin/e3db. For ease of use, add this directory to your
 path. For example:
 
-    $ unzip target/universal/e3db-0.5.0.zip -d $HOME
-    $ export PATH=$PATH:$HOME/e3db-0.5.0/bin
+    $ unzip e3db-0.5.1.zip -d $HOME
+    $ export PATH=$PATH:$HOME/e3db-0.5.1/bin
 
 You should now be able to run the E3DB CLI via the `e3db` command:
 
@@ -258,17 +243,16 @@ $ e3db readfile eee7bb6f-90f3-407f-a6f7-08923c0c64d5
 
 which would write a file named `message.txt` in the current directory.
 
-## Code Examples
+# Code Examples
 
-The `e3db` repository also contains example code showing simple
-Java code using the E3DB client library. The Java example code
-lives at:
+To obtain the source for the E3DB CLI and example code, clone
+the `e3db` repository from GitHub using the URL `https://github.com/tozny/e3db`.
+Once the repository is cloned, you can find Java examples in
+the `examples/src/main/java` directory.
 
-    examples/src/main/java
+## Building the Example Code
 
-### Building the Example Code
-
-To build the E3DB code examples with SBT, run:
+To build the E3DB code examples with SBT, run (in the root of the repository directory):
 
     $ ./sbt examples/compile
 
@@ -280,7 +264,7 @@ which you can get from the info command.
 
 Now go take a look at the example code and play around with it.
 
-### Creating an E3DB Client
+## Creating an E3DB Client
 
 Each example class begins by creating a `Client` object via the
 class `HttpE3DBClientBuilder`. Using a builder-style interface
@@ -293,6 +277,7 @@ Client client = new HttpE3DBClientBuilder()
   .setApiKeyId(apiKeyId)
   .setApiSecret(apiSecret)
   .setKeyManager(keyManager)
+  .setCabManager(cabManager)
   .setServiceUri("https://api.e3db.tozny.com/v1")
   .build();
 ```
@@ -301,9 +286,9 @@ In the example code, parameters like `clientId` come from command-line
 arguments. In a production system, they would come from a configuration
 file, credential storage system, or some other location.
 
-### Writing Records
+## Writing Records
 
-### Listing Records
+## Listing Records
 
 Once the client API is configured, it is simple to list records visible
 to the client by calling `listRecords`:
@@ -329,6 +314,6 @@ public class Meta {
 }
 ```
 
-### Reading Records
+## Reading Records
 
-### Sharing Records
+## Sharing Records
