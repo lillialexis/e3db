@@ -69,10 +69,18 @@ public class ListRecords {
             Record r = maybeRecord.get();
             String comment = r.data.get("comment");
             if (comment != null) {
-                System.out.println(meta.writer_id + " says: " + comment + "\n");
+                System.out.println(meta.writer_id + " says: " + comment);
 
                 try { // Share a "thank you" record with that client.
                   client.authorizeReader (clientId, meta.writer_id, "tozny_says_thanks");
+                  PolicyRequest req = new PolicyRequest(clientId,
+                      clientId,
+                      meta.writer_id,
+                      Policy.allow(Policy.READ),
+                      "tozny_says_thanks"
+                   );
+                   client.setPolicy(req);
+
                 } catch (java.util.NoSuchElementException e) {}
             }
           }
