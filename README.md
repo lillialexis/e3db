@@ -35,11 +35,7 @@ The Tozny E3DB software contains the following components:
 - A Java SDK for connecting to E3DB and performing
   database operations from Java applications or web services.
 
-To obtain the latest version of the E3DB CLI binary, use the following link:
-
-    https://github.com/tozny/e3db/releases/download/0.5.1/e3db-0.5.1.zip
-
-(You can always find the latest binaries on our releases page at
+To obtain the latest version of the E3DB CLI binary, download this file: https://github.com/tozny/e3db/releases/download/0.5.1/e3db-0.5.1.zip. (You can always find the latest binaries on our releases page at
 https://github.com/tozny/e3db/releases.)
 
 When you unzip this file, the E3DB CLI executable will be located at
