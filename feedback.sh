@@ -1,6 +1,9 @@
 #!/bin/sh
 
+# Change this to be your path to the e3db executable:
 e3db=./e3db-0.5.0/bin/e3db
+
+# This is Tozny's client ID. Don't change it:
 iID=166ed61a-3a56-4fe6-980f-2850aa82ea25
 
 echo "------------------------------------------------------------"
