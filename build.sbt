@@ -6,7 +6,7 @@
 //
 
 organization := "com.tozny.e3db"
-version := "0.5.1"
+version := "0.5.2"
 
 scalaVersion := "2.11.8"
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint")
