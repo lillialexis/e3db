@@ -72,8 +72,10 @@ object Main {
       return ok
     }
 
+    val url = Option(System.getenv("SERVICE_URL"))
+        .map(url => { println(s"Registering with ${url}"); url })
+        .getOrElse(DEFAULT_SERVICE_URL)
     val email = readLineRequired("E-Mail Address", "")
-    val url = readLineDefault("Service URL", DEFAULT_SERVICE_URL)
     val mgr = ConfigFileKeyManager.create(keyFile)
     val resp = new Registration.Builder()
       .setServiceUri(url)
