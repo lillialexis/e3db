@@ -1,6 +1,9 @@
 #!/bin/sh
 
-e3db=./e3db-0.5.0/bin/e3db
+# Change this to be your path to the e3db executable:
+e3db=e3db
+
+# This is Tozny's client ID. Don't change it:
 iID=166ed61a-3a56-4fe6-980f-2850aa82ea25
 
 echo "------------------------------------------------------------"
@@ -11,13 +14,13 @@ echo "All your feedback will be end-to-end encrypted with your key and ours."
 echo "Since E3DB is experimental, you may want to git pull the latest version first.\n"
 echo "What are your initial impressions?"
 read impressions
-feedback="$e3db write feedback '{\"feedback\":\"$impressions\"}'"
+feedback="$e3db write feedback '{\"comment\":\"$impressions\"}'"
 echo "We're about to send this. $feedback"
 echo "OK to send? [y/n] "
 read okToSend
 if [ $okToSend == 'y' ]; then
     echo "Writing to E3DB..."
-    share=`$e3db write feedback {\"feedback\":\"$impressions\"}`
+    share=`$e3db write feedback {\"comment\":\"$impressions\"}`
     echo "Record ID: $share"
     echo "Sharing with Tozny..."
     $e3db share feedback $iID
