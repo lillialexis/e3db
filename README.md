@@ -10,14 +10,14 @@ writing, and listing JSON data stored securely in the cloud.
 
 Please try out E3DB and give us feedback! Here are the basic steps:
 
- 1. Download [e3db-0.5.1.zip](https://github.com/tozny/e3db/releases/download/0.5.1/e3db-0.5.1.zip) and unzip it.
- 1. The `e3db` binary is now in `./e3db-0.5.1/bin/e3db`. Add that to your path.
- 1. `e3db register` # then check your email!
- 1. `e3db ls` # You should see nothing
+ 1. Download [e3db-0.5.2.zip](https://github.com/tozny/e3db/releases/download/0.5.2/e3db-0.5.2.zip) and unzip it.
+ 1. The `e3db` binary is now in `./e3db-0.5.2/bin`. Add that to your path.
+ 1. `e3db register` - then check your email!
+ 1. `e3db ls` - You should see nothing
  1. Write a record: `recordID=$(e3db write address_book '{"name": "John Doe", "phone": "503-555-1212"}')`
- 1. `e3db ls` # You should see your new record
+ 1. `e3db ls` - You should see your new record
  1. Read a record: `e3db read $recordID`
- 1. Review and run the feedback.sh script to tell us your thoughts. You'll have to set your path at the top.
+ 1. Review and run `bin/feedback.sh` to tell us your thoughts. You'll have to set your path at the top.
 
 ## Terms of Service
 
@@ -34,16 +34,16 @@ The Tozny E3DB software contains the following components:
 - A Java SDK for connecting to E3DB and performing
   database operations from Java applications or web services.
 
-To obtain the E3DB CLI binary, download [e3db-0.5.1.zip](https://github.com/tozny/e3db/releases/download/0.5.1/e3db-0.5.1.zip).
+To obtain the E3DB CLI binary, download [e3db-0.5.2.zip](https://github.com/tozny/e3db/releases/download/0.5.2/e3db-0.5.2.zip).
 You can always find the latest binaries on our releases page at
 https://github.com/tozny/e3db/releases.
 
 When you unzip this file, the E3DB CLI executable will be located at
-`e3db-0.5.1/bin/e3db`. For ease of use, add this directory to your
+`e3db-0.5.2/bin/e3db`. For ease of use, add this directory to your
 path. For example:
 
-    $ unzip e3db-0.5.1.zip -d $HOME
-    $ export PATH=$PATH:$HOME/e3db-0.5.1/bin
+    $ unzip e3db-0.5.2.zip -d $HOME
+    $ export PATH=$PATH:$HOME/e3db-0.5.2/bin
 
 You should now be able to run the E3DB CLI via the `e3db` command:
 
