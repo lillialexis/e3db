@@ -10,14 +10,13 @@ writing, and listing JSON data stored securely in the cloud.
 
 Please try out E3DB and give us feedback! Here are the basic steps:
 
- 1. [Download](https://github.com/tozny/e3db/releases/download/0.5.1/e3db-0.5.1.zip) and unzip E3DB.
- 1. The e3db binary is now in ./e3db-0.5.1/bin/e3db
- 1. e3db register # then check your email!
- 1. e3db ls # You should see nothing
- 1. Write a record: recordID=$(e3db write address_book '{"name": "John Doe", "phone": "503-555-1212"}')
- 1. e3db ls # You should see your new record
- 1. Read a record: e3db read $recordID
- 1. Now try the same thing on a different account and share the data as below.
+ 1. Download [e3db-0.5.1.zip](https://github.com/tozny/e3db/releases/download/0.5.1/e3db-0.5.1.zip) and unzip it.
+ 1. The `e3db` binary is now in `./e3db-0.5.1/bin/e3db`. Add that to your path.
+ 1. `e3db register` # then check your email!
+ 1. `e3db ls` # You should see nothing
+ 1. Write a record: `recordID=$(e3db write address_book '{"name": "John Doe", "phone": "503-555-1212"}')`
+ 1. `e3db ls` # You should see your new record
+ 1. Read a record: `e3db read $recordID`
  1. Review and run the feedback.sh script to tell us your thoughts. You'll have to set your path at the top.
 
 ## Terms of Service
@@ -25,7 +24,7 @@ Please try out E3DB and give us feedback! Here are the basic steps:
 Your use of E3DB must abide by our [Terms of Service](terms.pdf), as detailed in
 the linked document.
 
-## Installation
+# Installation & Use
 
 The Tozny E3DB software contains the following components:
 
@@ -35,8 +34,9 @@ The Tozny E3DB software contains the following components:
 - A Java SDK for connecting to E3DB and performing
   database operations from Java applications or web services.
 
-To obtain the latest version of the E3DB CLI binary, download this file: [e3db-0.5.1.zip](https://github.com/tozny/e3db/releases/download/0.5.1/e3db-0.5.1.zip). (You can always find the latest binaries on our releases page at
-https://github.com/tozny/e3db/releases.)
+To obtain the E3DB CLI binary, download [e3db-0.5.1.zip](https://github.com/tozny/e3db/releases/download/0.5.1/e3db-0.5.1.zip).
+You can always find the latest binaries on our releases page at
+https://github.com/tozny/e3db/releases.
 
 When you unzip this file, the E3DB CLI executable will be located at
 `e3db-0.5.1/bin/e3db`. For ease of use, add this directory to your
@@ -282,8 +282,6 @@ In the example code, parameters like `clientId` come from command-line
 arguments. In a production system, they would come from a configuration
 file, credential storage system, or some other location.
 
-## Writing Records
-
 ## Listing Records
 
 Once the client API is configured, it is simple to list records visible
@@ -309,7 +307,3 @@ public class Meta {
   public final Date last_modified;
 }
 ```
-
-## Reading Records
-
-## Sharing Records
