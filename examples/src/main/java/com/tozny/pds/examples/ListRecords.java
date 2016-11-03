@@ -10,12 +10,16 @@ package com.tozny.e3db.examples;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 import com.tozny.e3db.client.*;
 
 /**
  * Example code using the Tozny E3DB API to create a client and
  * list accessible records.
+ *
+ * This client then filters records to look for "feedback" comments
+ * and lists the feedback that has been shared with this CLIENT_ID.
  *
  * The user must supply the client ID, API key ID, and API secret
  * on the command line. These values are obtained during registration
@@ -49,8 +53,30 @@ public class ListRecords {
         .setServiceUri("https://api.e3db.tozny.com/v1")
         .build();
 
+      // Print out all the records:
       for (Meta meta : client.listRecords(100, 0)) {
-        System.out.printf("%-40s %s\n", meta.record_id, meta.type);
+          System.out.printf("%-40s %s\n", meta.record_id, meta.type);
+      }
+
+      // Now do the same, but just show the feedback comments:
+      System.out.println ("\nUser ID                                    Comment");
+      System.out.println ("--------------------------------------------------");
+      for (Meta meta : client.listRecords(100, 0)) {
+        // Now let's take special action for the "feedback" records.
+        if (meta.type.equals("feedback")) {
+          Optional<Record> maybeRecord = client.readRecord (meta.record_id);
+          if (maybeRecord.isPresent()) {
+            Record r = maybeRecord.get();
+            String comment = r.data.get("comment");
+            if (comment != null) {
+                System.out.println(meta.writer_id + " says: " + comment + "\n");
+
+                try { // Share a "thank you" record with that client.
+                  client.authorizeReader (clientId, meta.writer_id, "tozny_says_thanks");
+                } catch (java.util.NoSuchElementException e) {}
+            }
+          }
+        }
       }
     } catch (Exception e) {
       e.printStackTrace();

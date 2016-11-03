@@ -14,13 +14,13 @@ echo "All your feedback will be end-to-end encrypted with your key and ours."
 echo "Since E3DB is experimental, you may want to git pull the latest version first.\n"
 echo "What are your initial impressions?"
 read impressions
-feedback="$e3db write feedback '{\"feedback\":\"$impressions\"}'"
+feedback="$e3db write feedback '{\"comment\":\"$impressions\"}'"
 echo "We're about to send this. $feedback"
 echo "OK to send? [y/n] "
 read okToSend
 if [ $okToSend == 'y' ]; then
     echo "Writing to E3DB..."
-    share=`$e3db write feedback {\"feedback\":\"$impressions\"}`
+    share=`$e3db write feedback {\"comment\":\"$impressions\"}`
     echo "Record ID: $share"
     echo "Sharing with Tozny..."
     $e3db share feedback $iID
