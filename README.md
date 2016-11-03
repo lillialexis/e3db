@@ -13,10 +13,10 @@ Please try out E3DB and give us feedback! Here are the basic steps:
  1. Download and unzip E3DB
  1. e3db register # then check your email!
  1. e3db ls # You should see nothing
- 1. recordID=$(e3db write address_book '{"name": "John Doe", "phone": "503-555-1212"}')
+ 1. Write a record: recordID=$(e3db write address_book '{"name": "John Doe", "phone": "503-555-1212"}')
  1. e3db ls # You should see your new record
- 1. e3db read $recordID
- 1. Now try the same thing on a different account and share the data
+ 1. Read a record: e3db read $recordID
+ 1. Now try the same thing on a different account and share the data as below.
  1. Review and run the feedback.sh script to tell us your thoughts. You'll have to set your path at the top.
 
 ## Installation
@@ -265,6 +265,14 @@ lives at:
 To build the E3DB code examples with SBT, run:
 
     $ ./sbt examples/compile
+
+and to run it, you'll need to provide some information on the command line
+which you can get from the info command.
+
+    $ e3db info
+    $ ./sbt "examples/run your_client_id your_key_id your_api_secret"
+
+Now go take a look at the example code and play around with it.
 
 ### Creating an E3DB Client
 
