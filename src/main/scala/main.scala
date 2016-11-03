@@ -66,9 +66,15 @@ object Main {
 
   /** Perform interactive registration and exit. */
   private def do_register(opts: Options): CLIError \/ Unit = {
+    val keyFile = opts.config_file.getParent.resolve("e3db_key.json").toFile
+    if(opts.config_file.toFile.exists() || keyFile.exists()) {
+      println(s"WARNING: Registration (${opts.config_file.toFile}) or private key (${keyFile}) already exists. Move or delete those files if you wish to re-register.")
+      return ok
+    }
+
     val email = readLineRequired("E-Mail Address", "")
     val url = readLineDefault("Service URL", DEFAULT_SERVICE_URL)
-    val mgr = ConfigFileKeyManager.create(opts.config_file.getParent.resolve("e3db_key.json").toFile)
+    val mgr = ConfigFileKeyManager.create(keyFile)
     val resp = new Registration.Builder()
       .setServiceUri(url)
       .setEmail(email)
