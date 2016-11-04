@@ -249,7 +249,7 @@ Once the repository is cloned, you can find Java examples in
 the `examples/src/main/java` directory.
 
 For now, Javadocs for the E3DB SDK can be [downloaded as a
-JAR](https://s3-maven.tozny.com/repo/com/tozny/e3db/e3db-client/0.5.2/e3db-client-0.5.2-javadoc.jar).
+JAR](https://maven.tozny.com/repo/com/tozny/e3db/e3db-client/0.5.2/e3db-client-0.5.2-javadoc.jar).
 
 ## Building the Example Code
 
