@@ -14,7 +14,6 @@ scalacOptions ++= Seq("-feature", "-deprecation", "-Xfatal-warnings")
 
 enablePlugins(JavaAppPackaging)
 enablePlugins(DockerPlugin)
-enablePlugins(AshScriptPlugin)
 
 dockerBaseImage := "tozny/java"
 executableScriptName := "e3db"
