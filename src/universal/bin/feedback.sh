@@ -18,7 +18,7 @@ feedback="$e3db write feedback '{\"comment\":\"$impressions\"}'"
 echo "We're about to send this. $feedback"
 echo "OK to send? [y/n] "
 read okToSend
-if [ $okToSend == 'y' ]; then
+if [ $okToSend = 'y' ]; then
     echo "Writing to E3DB..."
     share=`$e3db write feedback {\"comment\":\"$impressions\"}`
     echo "Record ID: $share"
