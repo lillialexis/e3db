@@ -8,7 +8,8 @@ writing, and listing JSON data stored securely in the cloud.
 
 ## Quick Start
 
-Please try out E3DB and give us feedback! Read below for detailed instructions. Here are the basic steps. You'll need the JVM:
+Please try out E3DB and give us feedback! Read below for detailed
+instructions. Here are the basic steps. You'll need Java 8 or higher:
 
  1. Download [e3db-0.5.3.zip](https://github.com/tozny/e3db/releases/download/0.5.3/e3db-0.5.3.zip) and unzip it. Or clone this repo if you want extra fun.
  1. The `e3db` binary is now in `./e3db-0.5.3/bin`. Add that to your path.
@@ -32,8 +33,10 @@ The Tozny E3DB software contains the following components:
   accounts and performing interactive database operations. To use this
   you will need the JVM.
 
-- A Java SDK for connecting to E3DB and performing
-  database operations from Java applications or web services.
+- A Java 8 or later JRE for connecting to E3DB and performing database
+  operations from Java applications or web services. (Java 7 in
+  general works, but certain versions of OpenJDK 7 do not support a
+  recent enough SSL/TLS to use E3DB.)
 
 To obtain the E3DB CLI binary, download [e3db-0.5.3.zip](https://github.com/tozny/e3db/releases/download/0.5.3/e3db-0.5.3.zip).
 You can always find the latest binaries on our releases page at
@@ -244,6 +247,9 @@ To obtain the source for the E3DB CLI and example code, clone
 the `e3db` repository from GitHub using the URL `https://github.com/tozny/e3db`.
 Once the repository is cloned, you can find Java examples in
 the `examples/src/main/java` directory.
+
+For now, Javadocs for the E3DB SDK can be [downloaded as a
+JAR](https://s3-maven.tozny.com/repo/com/tozny/e3db/e3db-client/0.5.2/e3db-client-0.5.2-javadoc.jar).
 
 ## Building the Example Code
 

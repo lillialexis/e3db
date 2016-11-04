@@ -6,14 +6,13 @@
 //
 
 organization := "com.tozny.e3db"
-version := "0.5.3"
+version := "0.5.4"
 
 scalaVersion := "2.11.8"
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint")
 scalacOptions ++= Seq("-feature", "-deprecation", "-Xfatal-warnings")
 
 enablePlugins(JavaAppPackaging)
-enablePlugins(DockerPlugin)
 
 dockerBaseImage := "tozny/java"
 executableScriptName := "e3db"
