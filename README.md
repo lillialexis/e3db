@@ -62,12 +62,10 @@ the Tozny E3DB CLI, run:
 $ e3db register
 ```
 
-This will prompt interactively for your e-mail address (and the
-server URL---accept the default by pressing return):
+This will prompt interactively for your e-mail address:
 
 ```
 E-Mail Address []: foo@example.com<RETURN>
-Service URL [https://api.e3db.tozny.com/v1]: <RETURN>
 ```
 
 Tozny will send a confirmation e-mail to the address entered
