@@ -37,6 +37,7 @@ case class WriteFile(user_id: Option[UUID], ctype: String, filename: String) ext
 case class Ls(limit: Int, offset: Int) extends Command
 case object Register extends Command
 case object Info extends Command
+case object Feedback extends Command
 
 // TODO: These should arguably be subcommands like "e3db cab get"...
 case class GetCab(writer_id: UUID, user_id: UUID, record_type: String) extends Command
@@ -141,6 +142,7 @@ object OptionParser {
        command("register",  info(pure(Register),           progDesc("Register an account with E3DB."))),
        command("getcab",    info(getCabOpts <*> helper,    progDesc("Retrieve a CAB from E3DB."))),
        command("getkey",    info(getKeyOpts <*> helper,    progDesc("Retrieve a client's public key."))),
+       command("feedback",  info(pure(Feedback),           progDesc("Provide E3DB feedback to Tozny."))),
        command("share",     info(shareOpts <*> helper,     progDesc("Start sharing records with the given reader.")))/*,
        not yet working
        command("deny",     info(denyOpts <*> helper,  progDesc("Stop sharing records with the given user.")))*/,

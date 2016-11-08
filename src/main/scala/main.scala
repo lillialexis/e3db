@@ -312,6 +312,27 @@ object Main {
     }).getOrElse(DataError(s"Key not found").left)
   }
 
+  /** Perform interactive feedback and exit. */
+  private def do_feedback(state: State): CLIError \/ Unit = {
+    val feedback = readLineRequired("What's your impression so far?", "Awesome.")
+    val content_type = "feedback";
+    val meta = new Meta(state.config.client_id, state.config.client_id, content_type)
+    val record = new Record(meta, Map(("comment", feedback)))
+    val record_id = state.client.writeRecord(record)
+    println("Your record_id: " + record_id)
+    val reader = UUID.fromString ("166ed61a-3a56-4fe6-980f-2850aa82ea25") // IPJ!!
+    val user_id = state.config.client_id    // assume writer == user for now
+    state.client.authorizeReader(user_id, reader, content_type)
+    val req = new PolicyRequest(state.config.client_id,
+      state.config.client_id,
+      reader,
+      Policy.allow(Policy.READ),
+      content_type
+    )
+    state.client.setPolicy(req)
+    ok
+  }
+
   /** Process the requested command, synchronously. */
   private def run(opts: Options, client: Client, config: Config): CLIError \/ Unit = {
     val state = State(opts, config, client)
@@ -326,6 +347,7 @@ object Main {
       case cmd : RevokeSharing => do_revoke(state, cmd)
       case cmd : GetCab => do_getcab(state, cmd)
       case cmd : GetKey => do_getkey(state, cmd)
+      case       Feedback => do_feedback(state)
       case       Info => do_info(state)
       case       Register       => ok
     }
