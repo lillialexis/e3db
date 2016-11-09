@@ -282,7 +282,7 @@ object Main {
 
   /** Delete a record */
   private def do_delete(state: State, cmd: Delete): CLIError \/ Unit = {
-    state.client.deleteRecord(cmd.record_id);
+    state.client.deleteRecord(cmd.record_id)
 
     println(s"Deleted record: ${cmd.record_id}")
     ok

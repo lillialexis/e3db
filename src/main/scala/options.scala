@@ -34,7 +34,7 @@ case class Read(dest: Option[String], raw: Boolean, record_id: UUID) extends Com
 case class ReadFile(dest: Option[String], record_id: UUID) extends Command
 case class Write(user_id: Option[UUID], ctype: String, data: NonEmptyList[String]) extends Command
 case class WriteFile(user_id: Option[UUID], ctype: String, filename: String) extends Command
-case class Delete(user_id: Option[UUID], record_id: UUID) extends Command
+case class Delete(record_id: UUID) extends Command
 case class Ls(limit: Int, offset: Int) extends Command
 case object Register extends Command
 case object Info extends Command
@@ -92,8 +92,7 @@ object OptionParser {
       strArgument(metavar("FILENAME"), help("Path to file to write to E3DB")))(WriteFile)
 
   private val deleteOpts: Parser[Command] =
-    (optional(option[UUID](parseUUID, long("user"), help("Owning user of record"))) |@|
-      argument(parseUUID, metavar("RECORD_ID"), help("Record ID to delete")))(Delete)
+    argument(parseUUID, metavar("RECORD_ID"), help("Record ID to delete"))(Delete)
 
   // Options for the `ls` command:
   private val lsOpts: Parser[Command] =
