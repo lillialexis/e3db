@@ -34,6 +34,7 @@ case class Read(dest: Option[String], raw: Boolean, record_id: UUID) extends Com
 case class ReadFile(dest: Option[String], record_id: UUID) extends Command
 case class Write(user_id: Option[UUID], ctype: String, data: NonEmptyList[String]) extends Command
 case class WriteFile(user_id: Option[UUID], ctype: String, filename: String) extends Command
+case class Delete(record_id: UUID) extends Command
 case class Ls(limit: Int, offset: Int) extends Command
 case object Register extends Command
 case object Info extends Command
@@ -90,6 +91,9 @@ object OptionParser {
       strArgument(metavar("TYPE"), help("Record type")) |@|
       strArgument(metavar("FILENAME"), help("Path to file to write to E3DB")))(WriteFile)
 
+  private val deleteOpts: Parser[Command] =
+    argument(parseUUID, metavar("RECORD_ID"), help("Record ID to delete"))(Delete)
+
   // Options for the `ls` command:
   private val lsOpts: Parser[Command] =
     (option[Int](readInt, long("limit"),
@@ -137,6 +141,7 @@ object OptionParser {
        command("readfile",  info(readFileOpts <*> helper,  progDesc("Read a file from E3DB"))),
        command("write",     info(writeOpts <*> helper,     progDesc("Write data to E3DB"))),
        command("writefile", info(writeFileOpts <*> helper, progDesc("Write a file to E3DB"))),
+       command("delete",    info(deleteOpts <*> helper,    progDesc("Delete a record from E3DB"))),
        command("ls",        info(lsOpts <*> helper,        progDesc("List my records in E3DB"))),
        command("register",  info(pure(Register),           progDesc("Register an account with E3DB"))),
        command("getcab",    info(getCabOpts <*> helper,    progDesc("Retrieve a CAB from E3DB"))),
