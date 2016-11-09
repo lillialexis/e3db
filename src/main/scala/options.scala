@@ -92,7 +92,7 @@ object OptionParser {
       strArgument(metavar("FILENAME"), help("Path to file to write to E3DB")))(WriteFile)
 
   private val deleteOpts: Parser[Command] =
-    argument(parseUUID, metavar("RECORD_ID"), help("Record ID to delete"))(Delete)
+    (argument[UUID](parseUUID, metavar("RECORD_ID"), help("Record ID to delete"))).map(Delete.apply)
 
   // Options for the `ls` command:
   private val lsOpts: Parser[Command] =
