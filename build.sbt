@@ -6,7 +6,7 @@
 //
 
 organization := "com.tozny.e3db"
-version := "0.5.4"
+version := "0.5.5"
 
 scalaVersion := "2.11.8"
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint")
@@ -39,7 +39,7 @@ libraryDependencies ++= Seq(
   "org.bitbucket.b_c" % "jose4j" % "0.5.2",
 
   // Tozny Libraries
-  "com.tozny.e3db" % "e3db-client" % "0.5.2"
+  "com.tozny.e3db" % "e3db-client" % "0.5.4"
 )
 
 val examples = project.in(file("examples"))
