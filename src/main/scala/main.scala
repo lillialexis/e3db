@@ -280,6 +280,14 @@ object Main {
     ok
   }
 
+  /** Delete a record */
+  private def do_delete(state: State, cmd: Delete): CLIError \/ Unit = {
+    state.client.deleteRecord(cmd.record_id)
+
+    println(s"Deleted record: ${cmd.record_id}")
+    ok
+  }
+
   /** Read a CAB from E3DB and print it. */
   private def do_getcab(state: State, cmd: GetCab): CLIError \/ Unit = {
     state.client.getCab(cmd.writer_id, cmd.user_id, cmd.record_type).asScala.map({ cab =>
@@ -343,6 +351,7 @@ object Main {
       case cmd : ReadFile => do_readfile(state, cmd)
       case cmd : Write => do_write(state, cmd)
       case cmd : WriteFile => do_writefile(state, cmd)
+      case cmd : Delete => do_delete(state, cmd)
       case cmd : Sharing => do_share(state, cmd)
       case cmd : RevokeSharing => do_revoke(state, cmd)
       case cmd : GetCab => do_getcab(state, cmd)

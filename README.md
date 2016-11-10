@@ -11,14 +11,14 @@ writing, and listing JSON data stored securely in the cloud.
 Please try out E3DB and give us feedback! Read below for detailed
 instructions. Here are the basic steps. You'll need Java 8 or higher:
 
- 1. Download [e3db-0.5.4.zip](https://github.com/tozny/e3db/releases/download/0.5.4/e3db-0.5.4.zip) and unzip it. Or clone this repo if you want extra fun.
- 1. The `e3db` binary is now in `./e3db-0.5.4/bin`. Add that to your path.
+ 1. Download [e3db-0.5.5.zip](https://github.com/tozny/e3db/releases/download/0.5.5/e3db-0.5.5.zip) and unzip it. Or clone this repo if you want extra fun.
+ 1. The `e3db` binary is now in `./e3db-0.5.5/bin`. Add that to your path.
  1. `e3db register` - then check your email!
  1. `e3db ls` - You should see nothing
  1. Write a record: `recordID=$(e3db write address_book '{"name": "John Doe", "phone": "503-555-1212"}')`
  1. `e3db ls` - You should see your new record
  1. Read a record: `e3db read $recordID`
- 1. Review and run `feedback.sh` (also in `./e3db-0.5.4/bin`) to tell us your thoughts.
+ 1. Review and run `feedback.sh` (also in `./e3db-0.5.5/bin`) to tell us your thoughts.
 
 ## Terms of Service
 
@@ -38,16 +38,16 @@ The Tozny E3DB software contains the following components:
   general works, but certain versions of OpenJDK 7 do not support a
   recent enough SSL/TLS to use E3DB.)
 
-To obtain the E3DB CLI binary, download [e3db-0.5.4.zip](https://github.com/tozny/e3db/releases/download/0.5.4/e3db-0.5.4.zip).
+To obtain the E3DB CLI binary, download [e3db-0.5.5.zip](https://github.com/tozny/e3db/releases/download/0.5.5/e3db-0.5.5.zip).
 You can always find the latest binaries on our releases page at
 https://github.com/tozny/e3db/releases.
 
 When you unzip this file, the E3DB CLI executable will be located at
-`e3db-0.5.4/bin/e3db`. For ease of use, add this directory to your
+`e3db-0.5.5/bin/e3db`. For ease of use, add this directory to your
 path. For example:
 
-    $ unzip e3db-0.5.4.zip -d $HOME
-    $ export PATH=$PATH:$HOME/e3db-0.5.4/bin
+    $ unzip e3db-0.5.5.zip -d $HOME
+    $ export PATH=$PATH:$HOME/e3db-0.5.5/bin
 
 You should now be able to run the E3DB CLI via the `e3db` command:
 
@@ -248,8 +248,7 @@ the `e3db` repository from GitHub using the URL `https://github.com/tozny/e3db`.
 Once the repository is cloned, you can find Java examples in
 the `examples/src/main/java` directory.
 
-For now, Javadocs for the E3DB SDK can be [downloaded as a
-JAR](https://maven.tozny.com/repo/com/tozny/e3db/e3db-client/0.5.2/e3db-client-0.5.2-javadoc.jar).
+Javadocs for the E3DB SDK are available on [GitHub](https://tozny.github.io/e3db-client/).
 
 ## Building the Example Code
 
