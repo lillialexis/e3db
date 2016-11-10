@@ -7,13 +7,12 @@
 
 package com.tozny.e3db.cli
 
-import java.nio.file.{InvalidPathException,Path,Paths}
+import java.nio.file.{InvalidPathException, Path, Paths}
 import java.util.UUID
 
 import scalaz._
 import scalaz.std.AllInstances._
 import scalaz.syntax.apply._
-
 import net.bmjames.opts._
 
 /**
@@ -24,9 +23,14 @@ import net.bmjames.opts._
  */
 case class Options (
   verbose: Boolean,
-  config_file: Path,
+  private val config: Path,
+  private val profile: Option[String],
   command: Command
-)
+) {
+
+  val config_dir = profile.map(config.resolve(_)).getOrElse(config)
+
+}
 
 sealed trait Command
 
@@ -61,12 +65,20 @@ object OptionParser {
   }
 
   /** Argument parser for a java.nio.file.Path. */
-  private def parsePath = eitherReader { s =>
+  private def parseDir = eitherReader { s =>
     try {
       \/-(Paths.get(s).toAbsolutePath)
     } catch {
       case _: InvalidPathException =>
         -\/(s"Invalid path: ${s}")
+    }
+  }
+
+  private val validProfile = """^([\p{IsAlphabetic}|\p{Digit}|\.\-_ ]+)$""".r
+  private def parseProfile = eitherReader { s =>
+    s.trim() match {
+      case validProfile(p) => \/-(p)
+      case p => -\/(s"Invalid profile name. Profiles can only contain letters, numbers, dashes, periods, underscores and spaces: ${p}")
     }
   }
 
@@ -123,16 +135,20 @@ object OptionParser {
     (argument(parseUUID, metavar("READER_ID"), help("ID of reader."))).map(RevokeSharing.apply)
 
   // Default location of the E3DB CLI config file.
-  private val defaultConfigFile =
-    Paths.get(System.getProperty("user.home"), ".tozny", "e3db.json")
+  private val defaultConfigDir = Paths.get(System.getProperty("user.home"), ".tozny")
 
   private val parseOpts: Parser[Options] =
     // Global options:
     (switch(short('v'), long("verbose"), help("Enable verbose output")) |@|
-     option[Path](parsePath, long("config"), short('c'),
-                  help("CLI configuration file"),
-                  value(defaultConfigFile), metavar("FILENAME"),
+
+     option[Path](parseDir, long("config"), short('c'),
+                  help("CLI configuration directory"),
+                  value(defaultConfigDir), metavar("DIRECTORY"),
                   showDefaultWith(_.toString)) |@|
+
+      optional(option[String](parseProfile, long("profile"), short('p'),
+        help("Use a the E3DB client ID & key stored under the given profile in the configuration directory."),
+        metavar("PROFILE"))) |@|
 
      // Subcommands:
      subparser[Command](
