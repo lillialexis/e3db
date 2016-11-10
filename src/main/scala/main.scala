@@ -66,9 +66,10 @@ object Main {
 
   /** Perform interactive registration and exit. */
   private def do_register(opts: Options): CLIError \/ Unit = {
-    val keyFile = opts.config_file.getParent.resolve("e3db_key.json").toFile
-    if(opts.config_file.toFile.exists() || keyFile.exists()) {
-      println(s"WARNING: Registration (${opts.config_file.toFile}) or private key (${keyFile}) already exists. Move or delete those files if you wish to re-register.")
+    val keyFile = opts.config_dir.resolve("e3db_key.json").toFile
+    val configFile = opts.config_dir.resolve("e3db.json")
+    if(configFile.toFile.exists() || keyFile.exists()) {
+      println(s"WARNING: Registration (${configFile}) or private key (${keyFile}) already exists. Move or delete those files if you wish to re-register.")
       return ok
     }
 
@@ -86,7 +87,7 @@ object Main {
 
     val config = Config(resp.client_id, url, resp.api_key_id, resp.api_secret)
 
-    Config.save(opts.config_file, config)
+    Config.save(configFile, config)
 
     println(f"${"Registered Client ID:"}%-20s ${resp.client_id}")
     println("Please check your email to verify your account and complete registration.")
@@ -345,12 +346,12 @@ object Main {
       do_register(opts)
     } else {
       for {
-        config <- Config.load(opts.config_file)
-        keyManager = ConfigFileKeyManager.get(opts.config_file.getParent.resolve("e3db_key.json").toFile)
+        config <- Config.load(opts.config_dir.resolve("e3db.json"))
+        keyManager = ConfigFileKeyManager.get(opts.config_dir.resolve("e3db_key.json").toFile)
         cabManager = new ConfigCabManagerBuilder()
           .setKeyManager(keyManager)
           .setClientId(config.client_id)
-          .setConfigDir(new ConfigDir(opts.config_file.getParent.toFile))
+          .setConfigDir(new ConfigDir(opts.config_dir.toFile))
           .build()
         client = new HttpE3DBClientBuilder()
           .setClientId(config.client_id)
