@@ -39,17 +39,11 @@ public class ListRecords {
       String apiSecret = args[2];
       KeyManager keyManager = ConfigFileKeyManager.get();
       ConfigDir configDir = new ConfigDir(Paths.get(".").toFile());
-      CabManager cabManager = new ConfigCabManagerBuilder()
-          .setKeyManager(keyManager)
-          .setClientId(clientId)
-          .setConfigDir(configDir)
-          .build();
       Client client = new HttpE3DBClientBuilder()
         .setClientId(clientId)
         .setApiKeyId(apiKeyId)
         .setApiSecret(apiSecret)
         .setKeyManager(keyManager)
-        .setCabManager(cabManager)
         .setServiceUri("https://api.e3db.tozny.com/v1")
         .build();
 

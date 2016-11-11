@@ -370,18 +370,12 @@ object Main {
       for {
         config <- Config.load(opts.config_dir.resolve("e3db.json"))
         keyManager = ConfigFileKeyManager.get(opts.config_dir.resolve("e3db_key.json").toFile)
-        cabManager = new ConfigCabManagerBuilder()
-          .setKeyManager(keyManager)
-          .setClientId(config.client_id)
-          .setConfigDir(new ConfigDir(opts.config_dir.toFile))
-          .build()
         client = new HttpE3DBClientBuilder()
           .setClientId(config.client_id)
           .setServiceUri(config.api_url)
           .setApiKeyId(config.api_key_id)
           .setApiSecret(config.api_secret)
           .setKeyManager(keyManager)
-          .setCabManager(cabManager)
           .build()
         res <- run(opts, client, config)
       } yield res
