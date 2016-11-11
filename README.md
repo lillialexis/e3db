@@ -18,7 +18,7 @@ instructions. Here are the basic steps. You'll need Java 8 or higher:
  1. Write a record: `recordID=$(e3db write address_book '{"name": "John Doe", "phone": "503-555-1212"}')`
  1. `e3db ls` - You should see your new record
  1. Read a record: `e3db read $recordID`
- 1. Review and run `feedback.sh` (also in `./e3db-0.5.5/bin`) to tell us your thoughts.
+ 1. Run `e3db feedback` as many times as you like! This shares end-to-end encrypted feedback with our CEO
 
 ## Terms of Service
 

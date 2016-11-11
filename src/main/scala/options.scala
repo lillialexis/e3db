@@ -42,6 +42,7 @@ case class Delete(record_id: UUID) extends Command
 case class Ls(limit: Int, offset: Int) extends Command
 case object Register extends Command
 case object Info extends Command
+case object Feedback extends Command
 
 // TODO: These should arguably be subcommands like "e3db cab get"...
 case class GetCab(writer_id: UUID, user_id: UUID, record_type: String) extends Command
@@ -152,16 +153,17 @@ object OptionParser {
 
      // Subcommands:
      subparser[Command](
-       command("info",      info(pure(Info),               progDesc("Display configuration info"))),
-       command("read",      info(readOpts <*> helper,      progDesc("Read data from E3DB"))),
-       command("readfile",  info(readFileOpts <*> helper,  progDesc("Read a file from E3DB"))),
-       command("write",     info(writeOpts <*> helper,     progDesc("Write data to E3DB"))),
-       command("writefile", info(writeFileOpts <*> helper, progDesc("Write a file to E3DB"))),
-       command("delete",    info(deleteOpts <*> helper,    progDesc("Delete a record from E3DB"))),
-       command("ls",        info(lsOpts <*> helper,        progDesc("List my records in E3DB"))),
-       command("register",  info(pure(Register),           progDesc("Register an account with E3DB"))),
-       command("getcab",    info(getCabOpts <*> helper,    progDesc("Retrieve a CAB from E3DB"))),
-       command("getkey",    info(getKeyOpts <*> helper,    progDesc("Retrieve a client's public key"))),
+       command("info",      info(pure(Info),               progDesc("Display configuration info."))),
+       command("read",      info(readOpts <*> helper,      progDesc("Read data from E3DB."))),
+       command("readfile",  info(readFileOpts <*> helper,  progDesc("Read a file from E3DB."))),
+       command("write",     info(writeOpts <*> helper,     progDesc("Write data to E3DB."))),
+       command("writefile", info(writeFileOpts <*> helper, progDesc("Write a file to E3DB."))),
+       command("delete",    info(deleteOpts <*> helper,    progDesc("Delete a record from E3DB."))),
+       command("ls",        info(lsOpts <*> helper,        progDesc("List my records in E3DB."))),
+       command("register",  info(pure(Register),           progDesc("Register an account with E3DB."))),
+       command("getcab",    info(getCabOpts <*> helper,    progDesc("Retrieve a CAB from E3DB."))),
+       command("getkey",    info(getKeyOpts <*> helper,    progDesc("Retrieve a client's public key."))),
+       command("feedback",  info(pure(Feedback),           progDesc("Provide E3DB feedback to Tozny."))),
        command("share",     info(shareOpts <*> helper,     progDesc("Start sharing records with the given reader.")))/*,
        not yet working
        command("deny",     info(denyOpts <*> helper,  progDesc("Stop sharing records with the given user.")))*/,
