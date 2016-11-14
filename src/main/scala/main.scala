@@ -221,6 +221,22 @@ object Main {
     ok
   }
 
+  private def do_audit(state: State, cmd: ListReaders): CLIError \/ Unit = {
+    val user_id = cmd.user_id.getOrElse(state.config.client_id)
+    val readers = state.client.listReaders(user_id, cmd.ctype)
+
+    println(s"Records of type `${cmd.ctype}` are shared with these client IDs:")
+
+    readers.foreach { reader =>
+      if (reader == state.config.client_id)
+        println(s"* ${reader.toString} (me)")
+      else
+        println(s"* ${reader.toString}")
+    }
+
+    ok
+  }
+
   private def do_revoke(state: State, cmd: RevokeSharing): CLIError \/ Unit = {
     val user_id = state.config.client_id // assume writer == user for now
     state.client.revokeSharing(user_id, user_id, cmd.reader)
@@ -354,6 +370,7 @@ object Main {
       case cmd : WriteFile => do_writefile(state, cmd)
       case cmd : Delete => do_delete(state, cmd)
       case cmd : Sharing => do_share(state, cmd)
+      case cmd : ListReaders => do_audit(state, cmd)
       case cmd : RevokeSharing => do_revoke(state, cmd)
       case cmd : GetCab => do_getcab(state, cmd)
       case cmd : GetKey => do_getkey(state, cmd)

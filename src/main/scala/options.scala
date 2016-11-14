@@ -53,6 +53,7 @@ sealed trait Sharing
 case class AddSharing(ctype: String, reader: UUID) extends Command with Sharing
 case class RemoveSharing(ctype: String, reader: UUID) extends Command with Sharing
 case class RevokeSharing(reader: UUID) extends Command
+case class ListReaders(user_id: Option[UUID], ctype: String) extends Command
 
 object OptionParser {
   /** Argument parser for UUID parameters. */
@@ -135,6 +136,10 @@ object OptionParser {
   private val revokeOpts: Parser[Command] =
     (argument(parseUUID, metavar("READER_ID"), help("ID of reader."))).map(RevokeSharing.apply)
 
+  private val listReaderOpts: Parser[Command] =
+    (optional(option[UUID](parseUUID, long("user"), help("Owning user of records"))) |@|
+      strArgument(metavar("TYPE"), help("Record type")))(ListReaders)
+
   // Default location of the E3DB CLI config file.
   private val defaultConfigDir = Paths.get(System.getProperty("user.home"), ".tozny")
 
@@ -164,7 +169,8 @@ object OptionParser {
        command("getcab",    info(getCabOpts <*> helper,    progDesc("Retrieve a CAB from E3DB."))),
        command("getkey",    info(getKeyOpts <*> helper,    progDesc("Retrieve a client's public key."))),
        command("feedback",  info(pure(Feedback),           progDesc("Provide E3DB feedback to Tozny."))),
-       command("share",     info(shareOpts <*> helper,     progDesc("Start sharing records with the given reader.")))/*,
+       command("share",     info(shareOpts <*> helper,     progDesc("Start sharing records with the given reader."))),
+       command("audit",     info(listReaderOpts <*> helper, progDesc("Audit the readers allowed to view a given type.")))/*,
        not yet working
        command("deny",     info(denyOpts <*> helper,  progDesc("Stop sharing records with the given user.")))*/,
        command("revoke",    info(revokeOpts <*> helper,      progDesc("Revoke all sharing with the given reader.")))
