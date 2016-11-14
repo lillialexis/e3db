@@ -23,6 +23,7 @@ import org.jose4j.jwk._
 import org.jose4j.jwe.KeyManagementAlgorithmIdentifiers
 
 import com.tozny.e3db.client._
+import com.tozny.e3db.client.errors._
 import org.jose4j.base64url.Base64
 import org.jose4j.jwe._
 
@@ -386,12 +387,18 @@ object Main {
     (try {
       runWithOpts(OptionParser.parse(args))
     } catch {
+      case e: RegistrationError => RegisterError(e.getMessage, e).left
       case e: E3DBClientError => ClientError(e.getMessage, e).left
       case e: Exception      => MiscError(e.getMessage, e).left
     }).leftMap {
       case err: ConfigError => {
         println(err.message)
-        println("Run `e3db register' to create an account.")
+        println("Run `e3db register` to create an account.")
+      }
+
+      case err: RegisterError => {
+        println("Your account is not yet verified.")
+        println("Please check your email to complete account registration.")
       }
 
       case err: MiscError => {
