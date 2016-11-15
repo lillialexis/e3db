@@ -23,6 +23,7 @@ import org.jose4j.jwk._
 import org.jose4j.jwe.KeyManagementAlgorithmIdentifiers
 
 import com.tozny.e3db.client._
+import com.tozny.e3db.client.errors._
 import org.jose4j.base64url.Base64
 import org.jose4j.jwe._
 
@@ -370,18 +371,12 @@ object Main {
       for {
         config <- Config.load(opts.config_dir.resolve("e3db.json"))
         keyManager = ConfigFileKeyManager.get(opts.config_dir.resolve("e3db_key.json").toFile)
-        cabManager = new ConfigCabManagerBuilder()
-          .setKeyManager(keyManager)
-          .setClientId(config.client_id)
-          .setConfigDir(new ConfigDir(opts.config_dir.toFile))
-          .build()
         client = new HttpE3DBClientBuilder()
           .setClientId(config.client_id)
           .setServiceUri(config.api_url)
           .setApiKeyId(config.api_key_id)
           .setApiSecret(config.api_secret)
           .setKeyManager(keyManager)
-          .setCabManager(cabManager)
           .build()
         res <- run(opts, client, config)
       } yield res
@@ -392,12 +387,18 @@ object Main {
     (try {
       runWithOpts(OptionParser.parse(args))
     } catch {
+      case e: RegistrationError => RegisterError(e.getMessage, e).left
       case e: E3DBClientError => ClientError(e.getMessage, e).left
       case e: Exception      => MiscError(e.getMessage, e).left
     }).leftMap {
       case err: ConfigError => {
         println(err.message)
-        println("Run `e3db register' to create an account.")
+        println("Run `e3db register` to create an account.")
+      }
+
+      case err: RegisterError => {
+        println("Your account is not yet verified.")
+        println("Please check your email to complete account registration.")
       }
 
       case err: MiscError => {
