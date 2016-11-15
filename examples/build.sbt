@@ -10,6 +10,7 @@ organization := "com.tozny.e3db"
 
 autoScalaLibrary := false
 crossPaths := false
+resolvers += "tozny" at "https://maven.tozny.com/repo"
 
 libraryDependencies ++= Seq(
   "com.tozny.e3db" % "e3db-client" % "0.7.0",
