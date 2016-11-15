@@ -15,6 +15,6 @@ javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 javacOptions in (Compile, doc) := Seq("-source", "1.7")
 
 libraryDependencies ++= Seq(
-  "com.tozny.e3db" % "e3db-client" % "0.5.0",
+  "com.tozny.e3db" % "e3db-client" % "0.6.0",
   "org.slf4j" % "slf4j-nop" % "1.7.21"
 )
