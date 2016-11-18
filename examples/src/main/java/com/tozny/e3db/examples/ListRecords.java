@@ -7,10 +7,17 @@
 
 package com.tozny.e3db.examples;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.Optional;
+
+import com.google.gson.*;
+
 
 import com.tozny.e3db.client.*;
 
@@ -27,25 +34,86 @@ import com.tozny.e3db.client.*;
  * `e3db info'.
  */
 public class ListRecords {
+
+  static class Config {
+    UUID clientId;
+    String apiKeyId;
+    String apiSecret;
+    String apiUrl;
+  }
+
+  public static Config getConfig (String[] args) throws FileNotFoundException {
+    Config config = new Config();
+    if (args.length == 3) {
+      System.out.println ("Reading configuration from: Command line.");
+      config.clientId  = UUID.fromString(args[0]);
+      config.apiKeyId  = args[1];
+      config.apiSecret = args[2];
+      config.apiUrl    = "https://api.e3db.tozny.com/v1";
+    } else { //Read from config file.
+
+
+
+      Path configFile = Paths.get(System.getProperty("user.home"), ".tozny", "e3db.json");
+
+      BufferedReader br = new BufferedReader(new FileReader(configFile.toString()));
+      JsonParser parser = new JsonParser();
+      JsonObject jsonConfig = parser.parse(br).getAsJsonObject();
+
+      System.out.println ("Reading configuration from: " + configFile);
+      config.clientId = UUID.fromString(jsonConfig.get("client_id").getAsString());
+      config.apiKeyId = jsonConfig.get("api_key_id").getAsString();
+      config.apiSecret = jsonConfig.get("api_secret").getAsString();
+      config.apiUrl = jsonConfig.get("api_url").getAsString();
+    }
+    return config;
+  }
+
   public static void main(String[] args) {
-    if (args.length != 3) {
+    Config config = null;
+    try {
+      config = getConfig(args);
+    } catch (Exception e) {
+      config = null;
+    }
+    if (config == null) {
+      System.err.println ("Could not read configuration from file or command line.");
       System.err.println("Usage: ListRecords CLIENT_ID API_KEY_ID API_SECRET");
       System.exit(1);
     }
 
     try {
-      UUID clientId = UUID.fromString(args[0]);
-      String apiKeyId = args[1];
-      String apiSecret = args[2];
       KeyManager keyManager = ConfigFileKeyManager.get();
-      ConfigDir configDir = new ConfigDir(Paths.get(".").toFile());
       Client client = new HttpE3DBClientBuilder()
-        .setClientId(clientId)
-        .setApiKeyId(apiKeyId)
-        .setApiSecret(apiSecret)
+        .setClientId(config.clientId)
+        .setApiKeyId(config.apiKeyId)
+        .setApiSecret(config.apiSecret)
         .setKeyManager(keyManager)
-        .setServiceUri("https://api.e3db.tozny.com/v1")
+        .setServiceUri(config.apiUrl)
         .build();
+
+      // Write an encrypted record of type "feedback":
+      Meta writeMeta = new Meta(config.clientId, config.clientId, "feedback");
+      HashMap <String, String> map = new HashMap();
+      map.put("comment", "Hello World! I successfully ran the example file.");
+      Record feedbackRecord1 = new Record(writeMeta, map);
+      UUID feedbackRecordId = client.writeRecord(feedbackRecord1);
+      System.out.println("Feedback Created: " + feedbackRecordId);
+
+      //Read back the record we just wrote to the database
+      Record feedbackRecord2 = client.readRecord(feedbackRecordId).get();
+      System.out.println ("Read the comment: " + feedbackRecord2.data.get("comment"));
+
+      //Share "feedback" records with Isaac
+      UUID ipjId = UUID.fromString ("166ed61a-3a56-4fe6-980f-2850aa82ea25"); // IPJ!!
+      client.authorizeReader(config.clientId, ipjId, "feedback");
+      PolicyRequest shareReq = new PolicyRequest(config.clientId,
+              config.clientId,
+              ipjId,
+              Policy.allow(Policy.READ),
+              "feedback"
+      );
+      client.setPolicy(shareReq);
 
       // Print out all the records:
       for (Meta meta : client.listRecords(100, 0)) {
@@ -66,9 +134,9 @@ public class ListRecords {
                 System.out.println(meta.writer_id + " says: " + comment);
 
                 try { // Share a "thank you" record with that client.
-                  client.authorizeReader (clientId, meta.writer_id, "tozny_says_thanks");
-                  PolicyRequest req = new PolicyRequest(clientId,
-                      clientId,
+                  client.authorizeReader (config.clientId, meta.writer_id, "tozny_says_thanks");
+                  PolicyRequest req = new PolicyRequest(config.clientId,
+                      config.clientId,
                       meta.writer_id,
                       Policy.allow(Policy.READ),
                       "tozny_says_thanks"

@@ -255,8 +255,9 @@ Javadocs for the E3DB SDK are available on [GitHub](https://tozny.github.io/e3db
 To build the E3DB code examples with SBT, run (in the root of the repository directory):
 
     $ ./sbt examples/compile
+    $ ./sbt examples/run
 
-and to run it, you'll need to provide some information on the command line
+If you like, you can provide config information on the command line
 which you can get from the info command.
 
     $ e3db info
@@ -281,14 +282,53 @@ Client client = new HttpE3DBClientBuilder()
   .build();
 ```
 
-In the example code, parameters like `clientId` come from command-line
-arguments. In a production system, they would come from a configuration
-file, credential storage system, or some other location.
+In the example code, parameters like `clientId` come from the config file
+or command-line arguments. In a production system, they would come from a
+secure credential storage system, or some other location.
+
+## Writing Records
+Now that the client is configured, we can write a record into E3DB. It will
+be encrypted automatically and uploaded to the database.
+
+```java
+Meta writeMeta = new Meta(clientId, clientId, "feedback");
+HashMap <String, String> map = new HashMap();
+map.put("comment", "Hello World! I successfully ran the example file.");
+Record nameRecord = new Record(writeMeta, map);
+UUID newWriteId = client.writeRecord(nameRecord);
+System.out.println("Feedback Created: " + newWriteId);
+```
+
+## Reading Records
+In the above example, we received a record ID after writing the map to
+E3DB. Using this record ID, we can read the map back out. It gets
+transparently decrypted and displayed on the command line.
+
+```java
+Record feedbackRecord2 = client.readRecord(feedbackRecordId).get();
+System.out.println ("Read the comment: " + feedbackRecord2.data.get("comment"));
+```
+
+## Sharing Records
+Currently, sharing is facilitated by content type, in this case, the content
+type is "feedback", and so in the following example, we share the record that we
+created above with the UUID of Tozny's CEO Isaac.
+
+```java
+UUID ipjId = UUID.fromString ("166ed61a-3a56-4fe6-980f-2850aa82ea25");
+client.authorizeReader(clientId, ipjId, "feedback");
+PolicyRequest shareReq = new PolicyRequest(clientId,
+        clientId,
+        ipjId,
+        Policy.allow(Policy.READ),
+        "feedback"
+);
+client.setPolicy(shareReq);
+```
 
 ## Listing Records
 
-Once the client API is configured, it is simple to list records visible
-to the client by calling `listRecords`:
+It is simple to list records visible to the client by calling `listRecords`:
 
 ```java
 for (Meta meta : client.listRecords(100, 0)) {
@@ -310,3 +350,4 @@ public class Meta {
   public final Date last_modified;
 }
 ```
+

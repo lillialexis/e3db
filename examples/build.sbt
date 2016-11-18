@@ -11,6 +11,8 @@ organization := "com.tozny.e3db"
 autoScalaLibrary := false
 crossPaths := false
 
+mainClass in (Compile, run) := Some("com.tozny.e3db.examples.ListRecords")
+
 javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 javacOptions in (Compile, doc) := Seq("-source", "1.7")
 
