@@ -84,6 +84,18 @@ public class ListRecords {
         .setServiceUri(config.apiUrl)
         .build();
 
+      // Write an encrypted record of type "feedback":
+      Meta writeMeta = new Meta(config.clientId, config.clientId, "feedback");
+      HashMap <String, String> map = new HashMap();
+      map.put("comment", "Hello World! I successfully ran the example file.");
+      Record feedbackRecord1 = new Record(writeMeta, map);
+      UUID feedbackRecordId = client.writeRecord(feedbackRecord1);
+      System.out.println("Feedback Created: " + feedbackRecordId);
+
+      //Read back the record we just wrote to the database
+      Record feedbackRecord2 = client.readRecord(feedbackRecordId).get();
+      System.out.println ("Read the comment: " + feedbackRecord2.data.get("comment"));
+
       // Print out all the records:
       for (Meta meta : client.listRecords(100, 0)) {
           System.out.printf("%-40s %s\n", meta.record_id, meta.type);
