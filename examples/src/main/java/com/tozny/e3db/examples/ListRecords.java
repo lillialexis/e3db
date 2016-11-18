@@ -7,12 +7,13 @@
 
 package com.tozny.e3db.examples;
 
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.util.*;
 
 import com.memoizrlabs.retrooptional.Optional;
+import javax.json.*;
 import com.tozny.e3db.client.*;
 
 /**
@@ -28,23 +29,59 @@ import com.tozny.e3db.client.*;
  * `e3db info'.
  */
 public class ListRecords {
+
+  static class Config {
+    UUID clientId;
+    String apiKeyId;
+    String apiSecret;
+    String apiUrl;
+  }
+
+  public static Config getConfig (String[] args) throws FileNotFoundException {
+    Config config = new Config();
+    if (args.length == 3) {
+      System.out.println ("Reading configuration from: Command line.");
+      config.clientId  = UUID.fromString(args[0]);
+      config.apiKeyId  = args[1];
+      config.apiSecret = args[2];
+      config.apiUrl    = "https://api.e3db.tozny.com/v1";
+    } else { //Read from config file.
+      JsonReader jsonReader = null;
+      Map<String, String> env = System.getenv();
+      String configFile = env.get("HOME") + File.separator + ".tozny" + File.separator + "e3db.json";
+      System.out.println ("Reading configuration from: " + configFile);
+      jsonReader = Json.createReader(new FileInputStream(configFile));
+      JsonObject jsonConfig = jsonReader.readObject();
+      jsonReader.close();
+      config.clientId = UUID.fromString(jsonConfig.getString("client_id"));
+      config.apiKeyId = jsonConfig.getString("api_key_id");
+      config.apiSecret = jsonConfig.getString("api_secret");
+      config.apiUrl = jsonConfig.getString("api_url");
+    }
+    return config;
+  }
+
   public static void main(String[] args) {
-    if (args.length != 3) {
+    Config config = null;
+    try {
+      config = getConfig(args);
+    } catch (Exception e) {
+      config = null;
+    }
+    if (config == null) {
+      System.err.println ("Could not read configuration from file or command line.");
       System.err.println("Usage: ListRecords CLIENT_ID API_KEY_ID API_SECRET");
       System.exit(1);
     }
 
     try {
-      UUID clientId = UUID.fromString(args[0]);
-      String apiKeyId = args[1];
-      String apiSecret = args[2];
       KeyManager keyManager = ConfigFileKeyManager.get();
       Client client = new HttpE3DBClientBuilder()
-        .setClientId(clientId)
-        .setApiKeyId(apiKeyId)
-        .setApiSecret(apiSecret)
+        .setClientId(config.clientId)
+        .setApiKeyId(config.apiKeyId)
+        .setApiSecret(config.apiSecret)
         .setKeyManager(keyManager)
-        .setServiceUri("https://api.e3db.tozny.com/v1")
+        .setServiceUri(config.apiUrl)
         .build();
 
       // Print out all the records:
@@ -67,9 +104,9 @@ public class ListRecords {
             System.out.println(meta.writer_id + " says: " + comment);
 
             try { // Share a "thank you" record with that client.
-              client.authorizeReader (clientId, meta.writer_id, "tozny_says_thanks");
-              PolicyRequest req = new PolicyRequest(clientId,
-                  clientId,
+              client.authorizeReader (config.clientId, meta.writer_id, "tozny_says_thanks");
+              PolicyRequest req = new PolicyRequest(config.clientId,
+                  config.clientId,
                   meta.writer_id,
                   Policy.allow(Policy.READ),
                   "tozny_says_thanks"

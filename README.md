@@ -255,8 +255,9 @@ Javadocs for the E3DB SDK are available at https://tozny.github.io/e3db-client/.
 To build the E3DB code examples with SBT, run (in the root of the repository directory):
 
     $ ./sbt examples/compile
+    $ ./sbt examples/run
 
-and to run it, you'll need to provide some information on the command line
+If you like, you can provide config information on the command line
 which you can get from the info command.
 
     $ e3db info
@@ -281,9 +282,9 @@ Client client = new HttpE3DBClientBuilder()
   .build();
 ```
 
-In the example code, parameters like `clientId` come from command-line
-arguments. In a production system, they would come from a configuration
-file, credential storage system, or some other location.
+In the example code, parameters like `clientId` come from the config file
+or command-line arguments. In a production system, they would come from a
+secure credential storage system, or some other location.
 
 ## Listing Records
 
