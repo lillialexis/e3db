@@ -7,15 +7,17 @@
 
 package com.tozny.e3db.examples;
 
-import java.io.FileInputStream;
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import com.memoizrlabs.retrooptional.Optional;
-import javax.json.*;
+import com.google.gson.*;
+
 import com.tozny.e3db.client.*;
 
 /**
@@ -48,17 +50,20 @@ public class ListRecords {
       config.apiSecret = args[2];
       config.apiUrl    = "https://api.e3db.tozny.com/v1";
     } else { //Read from config file.
-      JsonReader jsonReader = null;
-      Map<String, String> env = System.getenv();
+
+
+
       Path configFile = Paths.get(System.getProperty("user.home"), ".tozny", "e3db.json");
+
+      BufferedReader br = new BufferedReader(new FileReader(configFile.toString()));
+      JsonParser parser = new JsonParser();
+      JsonObject jsonConfig = parser.parse(br).getAsJsonObject();
+
       System.out.println ("Reading configuration from: " + configFile);
-      jsonReader = Json.createReader(new FileInputStream(configFile.toString()));
-      JsonObject jsonConfig = jsonReader.readObject();
-      jsonReader.close();
-      config.clientId = UUID.fromString(jsonConfig.getString("client_id"));
-      config.apiKeyId = jsonConfig.getString("api_key_id");
-      config.apiSecret = jsonConfig.getString("api_secret");
-      config.apiUrl = jsonConfig.getString("api_url");
+      config.clientId = UUID.fromString(jsonConfig.get("client_id").getAsString());
+      config.apiKeyId = jsonConfig.get("api_key_id").getAsString();
+      config.apiSecret = jsonConfig.get("api_secret").getAsString();
+      config.apiUrl = jsonConfig.get("api_url").getAsString();
     }
     return config;
   }
