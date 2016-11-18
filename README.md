@@ -286,10 +286,32 @@ In the example code, parameters like `clientId` come from the config file
 or command-line arguments. In a production system, they would come from a
 secure credential storage system, or some other location.
 
+## Writing Records
+Now that the client is configured, we can write a record into E3DB. It will
+be encrypted automatically and uploaded to the database.
+
+```java
+Meta writeMeta = new Meta(clientId, clientId, "feedback");
+HashMap <String, String> map = new HashMap();
+map.put("comment", "Hello World! I successfully ran the example file.");
+Record nameRecord = new Record(writeMeta, map);
+UUID newWriteId = client.writeRecord(nameRecord);
+System.out.println("Feedback Created: " + newWriteId);
+```
+
+## Reading Records
+In the above example, we received a record ID after writing the map to
+E3DB. Using this record ID, we can read the map back out. It gets
+transparently decrypted and displayed on the command line.
+
+```java
+Record feedbackRecord2 = client.readRecord(feedbackRecordId).get();
+System.out.println ("Read the comment: " + feedbackRecord2.data.get("comment"));
+```
+
 ## Listing Records
 
-Once the client API is configured, it is simple to list records visible
-to the client by calling `listRecords`:
+It is simple to list records visible to the client by calling `listRecords`:
 
 ```java
 for (Meta meta : client.listRecords(100, 0)) {
@@ -311,3 +333,4 @@ public class Meta {
   public final Date last_modified;
 }
 ```
+
