@@ -10,6 +10,7 @@ organization := "com.tozny.e3db"
 
 autoScalaLibrary := false
 crossPaths := false
+mainClass in (Compile, run) := Some("com.tozny.e3db.examples.ListRecords")
 resolvers += "tozny" at "https://maven.tozny.com/repo"
 
 libraryDependencies ++= Seq(
