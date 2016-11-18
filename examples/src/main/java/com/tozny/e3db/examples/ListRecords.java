@@ -96,6 +96,17 @@ public class ListRecords {
       Record feedbackRecord2 = client.readRecord(feedbackRecordId).get();
       System.out.println ("Read the comment: " + feedbackRecord2.data.get("comment"));
 
+      //Share "feedback" records with Isaac
+      UUID ipjId = UUID.fromString ("166ed61a-3a56-4fe6-980f-2850aa82ea25"); // IPJ!!
+      client.authorizeReader(config.clientId, ipjId, "feedback");
+      PolicyRequest shareReq = new PolicyRequest(config.clientId,
+              config.clientId,
+              ipjId,
+              Policy.allow(Policy.READ),
+              "feedback"
+      );
+      client.setPolicy(shareReq);
+
       // Print out all the records:
       for (Meta meta : client.listRecords(100, 0)) {
           System.out.printf("%-40s %s\n", meta.record_id, meta.type);
