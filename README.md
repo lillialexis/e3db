@@ -309,6 +309,23 @@ Record feedbackRecord2 = client.readRecord(feedbackRecordId).get();
 System.out.println ("Read the comment: " + feedbackRecord2.data.get("comment"));
 ```
 
+## Sharing Records
+Currently, sharing is facilitated by content type, in this case, the content
+type is "feedback", and so in the following example, we share the record that we
+created above with the UUID of Tozny's CEO Isaac.
+
+```java
+UUID ipjId = UUID.fromString ("166ed61a-3a56-4fe6-980f-2850aa82ea25");
+client.authorizeReader(clientId, ipjId, "feedback");
+PolicyRequest shareReq = new PolicyRequest(clientId,
+        clientId,
+        ipjId,
+        Policy.allow(Policy.READ),
+        "feedback"
+);
+client.setPolicy(shareReq);
+```
+
 ## Listing Records
 
 It is simple to list records visible to the client by calling `listRecords`:
