@@ -20,6 +20,5 @@ resolvers += "tozny" at "https://maven.tozny.com/repo"
 
 libraryDependencies ++= Seq(
   "com.tozny.e3db" % "e3db-client" % "0.6.0",
-  "org.slf4j" % "slf4j-nop" % "1.7.21",
-  "org.glassfish" % "javax.json" % "1.0.4"
+  "org.slf4j" % "slf4j-nop" % "1.7.21"
 )
