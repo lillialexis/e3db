@@ -7,10 +7,12 @@
 
 package com.tozny.e3db.examples;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import com.memoizrlabs.retrooptional.Optional;
 import javax.json.*;
@@ -48,9 +50,9 @@ public class ListRecords {
     } else { //Read from config file.
       JsonReader jsonReader = null;
       Map<String, String> env = System.getenv();
-      String configFile = env.get("HOME") + File.separator + ".tozny" + File.separator + "e3db.json";
+      Path configFile = Paths.get(System.getProperty("user.home"), ".tozny", "e3db.json");
       System.out.println ("Reading configuration from: " + configFile);
-      jsonReader = Json.createReader(new FileInputStream(configFile));
+      jsonReader = Json.createReader(new FileInputStream(configFile.toString()));
       JsonObject jsonConfig = jsonReader.readObject();
       jsonReader.close();
       config.clientId = UUID.fromString(jsonConfig.getString("client_id"));
