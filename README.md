@@ -248,7 +248,7 @@ the `e3db` repository from GitHub using the URL `https://github.com/tozny/e3db`.
 Once the repository is cloned, you can find Java examples in
 the `examples/src/main/java` directory.
 
-Javadocs for the E3DB SDK are available on [GitHub](https://tozny.github.io/e3db-client/).
+Javadocs for the E3DB SDK are available at https://tozny.github.io/e3db-client/.
 
 ## Building the Example Code
 
