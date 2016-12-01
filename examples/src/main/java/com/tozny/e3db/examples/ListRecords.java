@@ -8,10 +8,11 @@
 package com.tozny.e3db.examples;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.Optional;
 
+import com.memoizrlabs.retrooptional.Optional;
 import com.tozny.e3db.client.*;
 
 /**
@@ -38,7 +39,6 @@ public class ListRecords {
       String apiKeyId = args[1];
       String apiSecret = args[2];
       KeyManager keyManager = ConfigFileKeyManager.get();
-      ConfigDir configDir = new ConfigDir(Paths.get(".").toFile());
       Client client = new HttpE3DBClientBuilder()
         .setClientId(clientId)
         .setApiKeyId(apiKeyId)
@@ -53,30 +53,30 @@ public class ListRecords {
       }
 
       // Now do the same, but just show the feedback comments:
+      List<String> feedbackType = new ArrayList<String>();
+      feedbackType.add("feedback");
+
       System.out.println ("\nUser ID                                    Comment");
       System.out.println ("--------------------------------------------------");
-      for (Meta meta : client.listRecords(100, 0)) {
-        // Now let's take special action for the "feedback" records.
-        if (meta.type.equals("feedback")) {
-          Optional<Record> maybeRecord = client.readRecord (meta.record_id);
-          if (maybeRecord.isPresent()) {
-            Record r = maybeRecord.get();
-            String comment = r.data.get("comment");
-            if (comment != null) {
-                System.out.println(meta.writer_id + " says: " + comment);
+      for (Meta meta : client.listRecords(100, 0, feedbackType)) {
+        Optional<Record> maybeRecord = client.readRecord (meta.record_id);
+        if (maybeRecord.isPresent()) {
+          Record r = maybeRecord.get();
+          String comment = r.data.get("comment");
+          if (comment != null) {
+            System.out.println(meta.writer_id + " says: " + comment);
 
-                try { // Share a "thank you" record with that client.
-                  client.authorizeReader (clientId, meta.writer_id, "tozny_says_thanks");
-                  PolicyRequest req = new PolicyRequest(clientId,
-                      clientId,
-                      meta.writer_id,
-                      Policy.allow(Policy.READ),
-                      "tozny_says_thanks"
-                   );
-                   client.setPolicy(req);
+            try { // Share a "thank you" record with that client.
+              client.authorizeReader (clientId, meta.writer_id, "tozny_says_thanks");
+              PolicyRequest req = new PolicyRequest(clientId,
+                  clientId,
+                  meta.writer_id,
+                  Policy.allow(Policy.READ),
+                  "tozny_says_thanks"
+              );
+              client.setPolicy(req);
 
-                } catch (java.util.NoSuchElementException e) {}
-            }
+            } catch (java.util.NoSuchElementException e) {}
           }
         }
       }

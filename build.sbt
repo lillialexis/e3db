@@ -39,7 +39,7 @@ libraryDependencies ++= Seq(
   "org.bitbucket.b_c" % "jose4j" % "0.5.2",
 
   // Tozny Libraries
-  "com.tozny.e3db" % "e3db-client" % "0.6.0"
+  "com.tozny.e3db" % "e3db-client" % "0.7.0"
 )
 
 val examples = project.in(file("examples"))
