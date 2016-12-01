@@ -318,7 +318,6 @@ In the above example, we received a record ID after writing the map to
 E3DB. Using this record ID, we can read the map back out. It gets
 downloaded and transparently decrypted and displayed on the command line.
 
-
 ```java
 Record feedbackRecord2 = client.readRecord(feedbackRecordId).get();
 System.out.println ("Read the comment: " + feedbackRecord2.data.get("comment"));
@@ -326,7 +325,6 @@ System.out.println ("Read the comment: " + feedbackRecord2.data.get("comment"));
 
 There's also a function `client.readRawRecord(id)`` that fetches, but does not decrypt
 the data, so you can see the encoded ciphertext if you like.
-
 
 ## Sharing Records
 
@@ -338,7 +336,6 @@ other party having access, including us.
 
 In the following example, we share the record that we created above with the `UUID` of
 Tozny's CEO Isaac.
-
 
 ```java
 UUID ipjId = UUID.fromString ("166ed61a-3a56-4fe6-980f-2850aa82ea25");
