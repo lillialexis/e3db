@@ -20,6 +20,7 @@ executableScriptName := "e3db"
 resolvers += Resolver.sonatypeRepo("releases")
 resolvers += Resolver.jcenterRepo
 resolvers += "tozny" at "https://maven.tozny.com/repo"
+resolvers += "jitpack" at "https://jitpack.io"
 
 libraryDependencies ++= Seq(
   // Core Libraries
