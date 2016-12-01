@@ -1,10 +1,17 @@
 # Tozny End-to-End Encrypted Database
 
 The Tozny End-to-End Encrypted Database (E3DB) is a storage
-platform with powerful sharing and consent management features.
+platform with powerful sharing and consent management features. [Read more on our blog](https://tozny.com/blog/announcing-project-e3db-the-end-to-end-encrypted-database/).
 
 Tozny's E3DB provides a familiar JSON-based NoSQL-style API for reading,
 writing, and listing JSON data stored securely in the cloud.
+
+First a caveat: *Don’t store anything you want to keep (yet!).*
+This is a developer preview, and we might have to delete the
+database periodically. Please do try it out as an experiment,
+and over time, we will build it into a durable encrypted storage
+solution!
+
 
 ## Quick Start
 
@@ -255,8 +262,9 @@ Javadocs for the E3DB SDK are available at https://tozny.github.io/e3db-client/.
 To build the E3DB code examples with SBT, run (in the root of the repository directory):
 
     $ ./sbt examples/compile
+    $ ./sbt examples/run
 
-and to run it, you'll need to provide some information on the command line
+If you like, you can provide config information on the command line
 which you can get from the info command.
 
     $ e3db info
@@ -281,14 +289,72 @@ Client client = new HttpE3DBClientBuilder()
   .build();
 ```
 
-In the example code, parameters like `clientId` come from command-line
-arguments. In a production system, they would come from a configuration
-file, credential storage system, or some other location.
+In the example code, parameters like `clientId` come from the config file
+or command-line arguments. In a production system, they would come from a
+secure credential storage system, or some other location.
+
+## Writing Records
+Now that the client is configured, we can write a record into E3DB. It will
+be encrypted automatically and uploaded to the database.
+
+- This starts with constructing metadata about the record itself; the writer
+  ID and client ID, as well as the content type.
+- The "feedback" content type is what we use for sharing end-to-end encrypted
+  feedback about E3DB itself :)
+- The map from String to String is the set of name/value pairs that are
+  converted to JSON. The values are encrypted and written to E3DB, all transparently.
+
+```java
+Meta writeMeta = new Meta(clientId, clientId, "feedback");
+HashMap <String, String> map = new HashMap();
+map.put("comment", "Hello World! I successfully ran the example file.");
+Record nameRecord = new Record(writeMeta, map);
+UUID newWriteId = client.writeRecord(nameRecord);
+System.out.println("Feedback Created: " + newWriteId);
+```
+
+## Reading Records
+In the above example, we received a record ID after writing the map to
+E3DB. Using this record ID, we can read the map back out. It gets
+downloaded and transparently decrypted and displayed on the command line.
+
+
+```java
+Record feedbackRecord2 = client.readRecord(feedbackRecordId).get();
+System.out.println ("Read the comment: " + feedbackRecord2.data.get("comment"));
+```
+
+There's also a function `client.readRawRecord(id)`` that fetches, but does not decrypt
+the data, so you can see the encoded ciphertext if you like.
+
+
+## Sharing Records
+
+Currently, sharing is facilitated by content type. Our sharing model allows
+the other party to read all records of the selected content type; we may add a more
+flexible sharing model in the near future. When you share data with another party,
+some crypto happens in the client to allow that party to read it, but without any
+other party having access, including us.
+
+In the following example, we share the record that we created above with the `UUID` of
+Tozny's CEO Isaac.
+
+
+```java
+UUID ipjId = UUID.fromString ("166ed61a-3a56-4fe6-980f-2850aa82ea25");
+client.authorizeReader(clientId, ipjId, "feedback");
+PolicyRequest shareReq = new PolicyRequest(clientId,
+        clientId,
+        ipjId,
+        Policy.allow(Policy.READ),
+        "feedback"
+);
+client.setPolicy(shareReq);
+```
 
 ## Listing Records
 
-Once the client API is configured, it is simple to list records visible
-to the client by calling `listRecords`:
+It is simple to list records visible to the client by calling `listRecords`:
 
 ```java
 for (Meta meta : client.listRecords(100, 0)) {
@@ -296,9 +362,13 @@ for (Meta meta : client.listRecords(100, 0)) {
 }
 ```
 
-For each record returned by `listRecords`, we receive an instance
-of `Meta`, which contains the following meta-information about each
-record in the data store:
+For each record returned by `listRecords`, we receive an instance of `Meta`,
+which contains the following meta-information about each record in the
+data store. The `record_id` is particularly interesting, because that's
+what you use for `readRecord`. For now, write and user IDs are more-or-less
+the same, but that will change in future versions, where you can read and
+write data about other users.
+
 
 ```java
 public class Meta {
@@ -310,3 +380,4 @@ public class Meta {
   public final Date last_modified;
 }
 ```
+
