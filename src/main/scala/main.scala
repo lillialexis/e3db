@@ -30,6 +30,11 @@ import org.jose4j.jwe._
 import scala.util.parsing.json.JSONObject
 
 object Main {
+
+  implicit class AsScala[T](opt: com.memoizrlabs.retrooptional.Optional[T]) {
+    def asScala: Option[T] = if(opt.isPresent) Some(opt.get()) else None
+  }
+
   private val ok = ().right
 
   private implicit class OptSyntax[A](opt: java.util.Optional[A]) {
