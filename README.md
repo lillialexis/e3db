@@ -1,10 +1,17 @@
 # Tozny End-to-End Encrypted Database
 
 The Tozny End-to-End Encrypted Database (E3DB) is a storage
-platform with powerful sharing and consent management features.
+platform with powerful sharing and consent management features. [Read more on our blog](https://tozny.com/blog/announcing-project-e3db-the-end-to-end-encrypted-database/).
 
 Tozny's E3DB provides a familiar JSON-based NoSQL-style API for reading,
 writing, and listing JSON data stored securely in the cloud.
+
+First a caveat: *Don’t store anything you want to keep (yet!).*
+This is a developer preview, and we might have to delete the
+database periodically. Please do try it out as an experiment,
+and over time, we will build it into a durable encrypted storage
+solution!
+
 
 ## Quick Start
 
@@ -290,6 +297,13 @@ secure credential storage system, or some other location.
 Now that the client is configured, we can write a record into E3DB. It will
 be encrypted automatically and uploaded to the database.
 
+- This starts with constructing metadata about the record itself; the writer
+  ID and client ID, as well as the content type.
+- The "feedback" content type is what we use for sharing end-to-end encrypted
+  feedback about E3DB itself :)
+- The map from String to String is the set of name/value pairs that are
+  converted to JSON. The values are encrypted and written to E3DB, all transparently.
+
 ```java
 Meta writeMeta = new Meta(clientId, clientId, "feedback");
 HashMap <String, String> map = new HashMap();
@@ -302,17 +316,29 @@ System.out.println("Feedback Created: " + newWriteId);
 ## Reading Records
 In the above example, we received a record ID after writing the map to
 E3DB. Using this record ID, we can read the map back out. It gets
-transparently decrypted and displayed on the command line.
+downloaded and transparently decrypted and displayed on the command line.
+
 
 ```java
 Record feedbackRecord2 = client.readRecord(feedbackRecordId).get();
 System.out.println ("Read the comment: " + feedbackRecord2.data.get("comment"));
 ```
 
+There's also a function "client.readRawRecord(id)" that fetches, but does not decrypt
+the data, so you can see the encoded ciphertext if you like.
+
+
 ## Sharing Records
-Currently, sharing is facilitated by content type, in this case, the content
-type is "feedback", and so in the following example, we share the record that we
-created above with the UUID of Tozny's CEO Isaac.
+
+Currently, sharing is facilitated by content type. Our sharing model currently allows
+the other party to read all records of the selected content type; we may add more
+flexible sharing model in the near future. When you share data with another party,
+some crypto happens in the client to allow that party to read it, but without any
+other party having access, including us.
+
+In the following example, we share the record that we created above with the UUID of
+Tozny's CEO Isaac.
+
 
 ```java
 UUID ipjId = UUID.fromString ("166ed61a-3a56-4fe6-980f-2850aa82ea25");
@@ -336,9 +362,13 @@ for (Meta meta : client.listRecords(100, 0)) {
 }
 ```
 
-For each record returned by `listRecords`, we receive an instance
-of `Meta`, which contains the following meta-information about each
-record in the data store:
+For each record returned by listRecords, we receive an instance of Meta,
+which contains the following meta-information about each record in the
+data store. The record_id is particularly interesting, because that's
+what you use for readRecord. For now, write and user IDs are more-or-less
+the same, but that will change in future versions, where you can read and
+write data about other users.
+
 
 ```java
 public class Meta {
