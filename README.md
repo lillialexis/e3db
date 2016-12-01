@@ -324,19 +324,19 @@ Record feedbackRecord2 = client.readRecord(feedbackRecordId).get();
 System.out.println ("Read the comment: " + feedbackRecord2.data.get("comment"));
 ```
 
-There's also a function "client.readRawRecord(id)" that fetches, but does not decrypt
+There's also a function `client.readRawRecord(id)`` that fetches, but does not decrypt
 the data, so you can see the encoded ciphertext if you like.
 
 
 ## Sharing Records
 
-Currently, sharing is facilitated by content type. Our sharing model currently allows
-the other party to read all records of the selected content type; we may add more
+Currently, sharing is facilitated by content type. Our sharing model allows
+the other party to read all records of the selected content type; we may add a more
 flexible sharing model in the near future. When you share data with another party,
 some crypto happens in the client to allow that party to read it, but without any
 other party having access, including us.
 
-In the following example, we share the record that we created above with the UUID of
+In the following example, we share the record that we created above with the `UUID` of
 Tozny's CEO Isaac.
 
 
@@ -362,10 +362,10 @@ for (Meta meta : client.listRecords(100, 0)) {
 }
 ```
 
-For each record returned by listRecords, we receive an instance of Meta,
+For each record returned by `listRecords`, we receive an instance of `Meta`,
 which contains the following meta-information about each record in the
-data store. The record_id is particularly interesting, because that's
-what you use for readRecord. For now, write and user IDs are more-or-less
+data store. The `record_id` is particularly interesting, because that's
+what you use for `readRecord`. For now, write and user IDs are more-or-less
 the same, but that will change in future versions, where you can read and
 write data about other users.
 
