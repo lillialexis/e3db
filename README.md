@@ -16,7 +16,8 @@ solution!
 ## Quick Start
 
 Please try out E3DB and give us feedback! Read below for detailed
-instructions. Here are the basic steps. You'll need Java 8 or higher:
+instructions. Here are the basic steps. You'll need Java 8 or higher.
+E3DB has been tested on MacOS, Windows, and Linux:
 
  1. Download [e3db-0.7.0.zip](https://github.com/tozny/e3db/releases/download/0.7.0/e3db-0.7.0.zip) and unzip it. Or clone this repo if you want extra fun.
  1. The `e3db` binary is now in `./e3db-0.7.0/bin`. Add that to your path.
