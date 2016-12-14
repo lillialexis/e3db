@@ -14,7 +14,7 @@ mainClass in (Compile, run) := Some("com.tozny.e3db.examples.ListRecords")
 resolvers += "tozny" at "https://maven.tozny.com/repo"
 
 libraryDependencies ++= Seq(
-  "com.tozny.e3db" % "e3db-client" % "0.7.0",
+  "com.tozny.e3db" % "e3db-client" % "0.7.1",
   "org.slf4j" % "slf4j-nop" % "1.7.21",
   "com.github.memoizr" % "retro-optional" % "0.2.0"
 )
